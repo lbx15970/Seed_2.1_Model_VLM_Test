@@ -1,0 +1,111 @@
+{
+  "_meta": {
+    "source": "任务.md 更新版：基于提示词v1 + Seed 2.1 Turbo 的 Hook 提取结果 + 人工判断",
+    "note": "本项目只关注 hook（结尾钩子）。表格中的时间戳均为 hook 的 start-end。",
+    "quality_legend": {
+      "good": "绿色 - goodcase，是真正的 hook 且截点准确",
+      "acceptable": "无色 - 能接受，可删可留",
+      "borderline": "黄色 - 时间点前后微调会更好",
+      "bad": "红色 - badcase，本质不是有效 hook 或截点错误，需重点规避"
+    },
+    "badcase_criteria": [
+      "事情已经说完了，没有想知道的东西",
+      "事情虽然没结束，但不够吸引人",
+      "停在普通对白/过渡位置，不是关键节点",
+      "观众不知道发生了什么，结束了也不知道期待什么",
+      "最精彩的地方已经过去了，才停下来",
+      "看起来有问题，但本质上是一个很平淡的点"
+    ],
+    "badcase_formula": "钩子 badcase = 没有未解决的问题 + 没有情绪拉力 + 没有下一步期待",
+    "time_unit": "ms"
+  },
+  "case1": {
+    "name": "蒙眼望断江南雪",
+    "hooks": [
+      {"start_time": 207000, "end_time": 217000, "hook_type": "冲突悬念", "quality": "acceptable", "content": "沈惊寒亮出契纸称叶家借寿十年期满，叶苍玄阴沉反问“老夫若是不认呢”"},
+      {"start_time": 643000, "end_time": 678500, "hook_type": "身份悬念", "quality": "acceptable", "content": "沈惊寒曝出萧擎天借三成武骨旧账，萧擎天震惊反问“你到底是谁”"},
+      {"start_time": 57000, "end_time": 65000, "hook_type": "信息悬念", "quality": "acceptable", "content": "叶家寿宴叶苍玄假意赐座，沈惊寒当众表明是来收账"},
+      {"start_time": 584000, "end_time": 626000, "hook_type": "冲突悬念", "quality": "acceptable", "content": "萧擎天提出道歉、烧账、滚出江南三条件，拿匕首威胁沈惊寒"},
+      {"start_time": 399000, "end_time": 405000, "hook_type": "冲突悬念", "quality": "acceptable", "content": "沈惊寒收走叶苍玄半条命转身离开，叶少轩怒喝“站住”"},
+      {"start_time": 460000, "end_time": 480000, "hook_type": "结果悬念", "quality": "bad", "content": "叶少轩吃亏后下令去请白老和萧擎天来撑腰"},
+      {"start_time": 820000, "end_time": 824000, "hook_type": "关系悬念", "quality": "acceptable", "content": "萧擎天认下沈少身份后与叶家断交，拿出银行卡递向沈惊寒"}
+    ]
+  },
+  "case2": {
+    "name": "渔乡守真心",
+    "hooks": [
+      {"start_time": 829000, "end_time": 852000, "hook_type": "危机爆发", "quality": "good", "content": "海上突发龙卷风小船快被掀翻，牛八一喊着要连人带船进海岛空间"},
+      {"start_time": 1000000, "end_time": 1024000, "hook_type": "爽点兑现前", "quality": "bad", "content": "陈大贵和后妈当众嘲讽牛八一吹牛没带回货，等着看笑话"},
+      {"start_time": 477000, "end_time": 482000, "hook_type": "关系悬念", "quality": "bad", "content": "牛八一提出借真真家船出海鱼获分八成，真真满脸震惊"},
+      {"start_time": 1328000, "end_time": 1331000, "hook_type": "关系悬念", "quality": "acceptable", "content": "牛八一答应分八成鱼获给何家，说要再加一句话，众人好奇"},
+      {"start_time": 44000, "end_time": 49000, "hook_type": "设定奇观", "quality": "bad", "content": "牛八一按完断亲手印凭空消失被传送到陌生热带海岛"},
+      {"start_time": 327000, "end_time": 338000, "hook_type": "结果悬念", "quality": "bad", "content": "牛八一把海岛空间海水倒在海边盼引来鱼，紧张盯水面"},
+      {"start_time": 1600000, "end_time": 1614000, "hook_type": "结果悬念", "quality": "acceptable", "content": "牛八一向村支书提出批宅基地盖房，村支书皱眉说不好办"}
+    ]
+  },
+  "case3": {
+    "name": "一次伸手，一生情",
+    "hooks": [
+      {"start_time": 338000, "end_time": 346000, "hook_type": "冲突悬念", "quality": "good", "content": "总裁认定外卖员撞了父亲还劫财，下令备机赶去云城要他付出代价"},
+      {"start_time": 405000, "end_time": 415000, "hook_type": "危机爆发", "quality": "acceptable", "content": "富家女带保镖找上门认定外卖员撞父亲，放话律师函马上到"},
+      {"start_time": 558000, "end_time": 570000, "hook_type": "结果悬念", "quality": "acceptable", "content": "外卖员本指望行车记录仪证清白，却被告知录像已被覆盖"},
+      {"start_time": 714000, "end_time": 720000, "hook_type": "结果悬念", "quality": "bad", "content": "原告怒斥张政一家哭没用，病房老人监护仪突然波动"},
+      {"start_time": 828000, "end_time": 858000, "hook_type": "冲突悬念", "quality": "acceptable", "content": "原告拿出肇事逃逸照片当证据，妻子动摇追问怎么回事"},
+      {"start_time": 892000, "end_time": 905000, "hook_type": "关系悬念", "quality": "bad", "content": "外卖员含泪认罪，女儿突然站出来称人是自己撞的、爸替她顶罪"},
+      {"start_time": 929000, "end_time": 940000, "hook_type": "爽点兑现前", "quality": "acceptable", "content": "法官正要宣判，被救老人突然出现在法庭门口全场惊呆"},
+      {"start_time": 960000, "end_time": 1015000, "hook_type": "危机爆发", "quality": "acceptable", "content": "老人当庭晕倒急需救心丸，原告一把打翻药瓶"},
+      {"start_time": 1136000, "end_time": 1148000, "hook_type": "爽点余波", "quality": "bad", "content": "医生当众说出真相老人亲口称外卖员是救命恩人，原告全家傻眼"},
+      {"start_time": 1405000, "end_time": 1411000, "hook_type": "利益期待", "quality": "acceptable", "content": "房东得知外卖员是萧家救命恩人当场吓慌，楼梯口传来脚步声"}
+    ]
+  },
+  "case4": {
+    "name": "新娘当场换新郎",
+    "hooks": [
+      {"start_time": 662000, "end_time": 670000, "hook_type": "冲突悬念", "quality": "acceptable", "content": "江离成闯到酒店化妆间看到盛装的沈念，震惊喊出她名字"},
+      {"start_time": 63000, "end_time": 68000, "hook_type": "结果悬念", "quality": "acceptable", "content": "被新郎和闺蜜接连寒心，新娘沈念掏出手机发消息喊人来抢亲"},
+      {"start_time": 200000, "end_time": 202900, "hook_type": "冲突悬念", "quality": "acceptable", "content": "沈念当面质问江离成：现在跟自己走，还是继续等伴娘苏婉婉"},
+      {"start_time": 285000, "end_time": 291000, "hook_type": "爽点兑现前", "quality": "acceptable", "content": "沈念表示过往忍让到此为止，江离成震怒，沈念低头操作手机"},
+      {"start_time": 397000, "end_time": 404000, "hook_type": "结果悬念", "quality": "borderline", "content": "青梅竹马顾砚准时赶到，向穿婚纱的沈念伸手邀她跟自己走"},
+      {"start_time": 120000, "end_time": 127000, "hook_type": "冲突悬念", "quality": "bad", "content": "吉时将近，苏婉婉当众称补错眼线颜色要换黑色重新补妆"},
+      {"start_time": 523000, "end_time": 530500, "hook_type": "冲突悬念", "quality": "acceptable", "content": "江离成拼命挣脱阻拦要追沈念，沈父冷着脸说“不用了”"},
+      {"start_time": 441000, "end_time": 446500, "hook_type": "信息悬念", "quality": "bad", "content": "江离成怒问顾砚凭什么带走沈念，顾砚笑答“凭我 8:58 到”"}
+    ]
+  },
+  "case5": {
+    "name": "爷爷不请七遍不动筷",
+    "hooks": [
+      {"start_time": 12000, "end_time": 17000, "hook_type": "信息悬念", "quality": "bad", "content": "沈家七遍请饭规矩在新媳妇进门当天被打破，媳妇当场收爷爷碗"},
+      {"start_time": 596000, "end_time": 607000, "hook_type": "冲突悬念", "quality": "acceptable", "content": "女主当众暗指等爷爷开饭把菜等凉，爷爷脸色骤沉放下筷子"},
+      {"start_time": 661000, "end_time": 673000, "hook_type": "关系悬念", "quality": "acceptable", "content": "女主提起两人四年感情说吃饭规矩得谈谈，男主误以为她后悔"},
+      {"start_time": 787000, "end_time": 798000, "hook_type": "冲突悬念", "quality": "bad", "content": "爷爷当众给新孙媳下马威，称进沈家门就要懂沈家规矩"},
+      {"start_time": 870000, "end_time": 882000, "hook_type": "爽点兑现前", "quality": "acceptable", "content": "婆婆嗓子哑仍要请爷爷吃饭，女主突然放下水果刀走向阳台"},
+      {"start_time": 880000, "end_time": 894000, "hook_type": "冲突悬念", "quality": "acceptable", "content": "女主打破规矩只叫爷爷一遍吃饭，公公和爷爷当场愣住"}
+    ]
+  },
+  "case6": {
+    "name": "狐狸抬轿",
+    "hooks": [
+      {"start_time": 176000, "end_time": 204000, "hook_type": "身份悬念", "quality": "bad", "content": "王老爹发现抬轿两人走路不留脚印、又不肯透露求救者身份，疑心有鬼"},
+      {"start_time": 205000, "end_time": 212000, "hook_type": "结果悬念", "quality": "acceptable", "content": "雪豹带成群野兽拦路，王老爹吓得叫停，灰衣男子淡定说雪豹不敢伤人"},
+      {"start_time": 226000, "end_time": 253000, "hook_type": "冲突悬念", "quality": "borderline", "content": "诡异巨树拦路王老爹要原路返回，白衣男子拦住称收了好处不能反悔"},
+      {"start_time": 286000, "end_time": 301000, "hook_type": "身份悬念", "quality": "acceptable", "content": "白衣男子露白色利爪撕碎树根，王老爹震惊质问两人到底是什么东西"},
+      {"start_time": 335000, "end_time": 345000, "hook_type": "身份悬念", "quality": "acceptable", "content": "王老爹被带进山洞见满洞狐狸，前排狐狸站起周身冒白烟开始化形"},
+      {"start_time": 470000, "end_time": 487000, "hook_type": "冲突悬念", "quality": "acceptable", "content": "黑狐刑官误以为王老爹要伤白狐老祖扑上去咬住其胳膊，王老爹忍痛劝说"},
+      {"start_time": 582000, "end_time": 598000, "hook_type": "利益期待", "quality": "bad", "content": "狐族宝库大门打开满室奇珍任挑，王老爹却直言不要转身要走"},
+      {"start_time": 608000, "end_time": 614700, "hook_type": "喜剧反差", "quality": "acceptable", "content": "白衣男子搬出成袋金元宝倒桌上，王老爹瞪大双眼惊得说不出话"}
+    ]
+  },
+  "case7": {
+    "name": "别怪我心狠，谁让你动我三十万鱼苗",
+    "hooks": [
+      {"start_time": 290000, "end_time": 306000, "hook_type": "危机爆发", "quality": "acceptable", "content": "大妈拿剧毒除草剂要倒进鱼塘，放话让男主 30 万鱼全死光，同伙阻拦无用"},
+      {"start_time": 437000, "end_time": 441000, "hook_type": "冲突悬念", "quality": "acceptable", "content": "警察查案大妈凑过来乱指点，警察一句话问得她瞬间慌乱"},
+      {"start_time": 47000, "end_time": 54000, "hook_type": "冲突悬念", "quality": "bad", "content": "男子揭穿大妈偷捞两条锦鲤值五千属盗窃，大妈脸色大变"},
+      {"start_time": 503000, "end_time": 515000, "hook_type": "结果悬念", "quality": "acceptable", "content": "大妈嘴硬说监控伪造，警察拿出脚印工具断面全套证据反问她"},
+      {"start_time": 173000, "end_time": 197000, "hook_type": "结果悬念", "quality": "acceptable", "content": "大妈叫两同伙密谋蒙面偷光 30 万锦鲤，备好电鱼工具"},
+      {"start_time": 80000, "end_time": 98000, "hook_type": "爽点兑现前", "quality": "acceptable", "content": "大妈坐地撒泼诬陷男主欺负老小，男主掏手机录像称喊越大声证据越清楚"},
+      {"start_time": 102000, "end_time": 120000, "hook_type": "爽点兑现前", "quality": "acceptable", "content": "大妈偷鱼被抓掀桶碎鱼泄愤，男主放话不知好别怪自己心狠"},
+      {"start_time": 333000, "end_time": 354000, "hook_type": "身份悬念", "quality": "acceptable", "content": "男主发现满塘死鱼报警，称完整监控拍到嫌疑人面部，天亮要看清真凶"}
+    ]
+  }
+}

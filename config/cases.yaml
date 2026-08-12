@@ -1,0 +1,31 @@
+# 7 个短剧 Case 集。id 用于命名结果文件与关联人工标注。
+# 实测视频约 43-45MB（<50MB），标准方舟 v3 端点 video_url URL 传入即可。
+cases:
+  - id: case1
+    name: 蒙眼望断江南雪
+    video_url: "https://tos.mobgi.com/tos_beijing/material_1/20260722/12400120711/12400121270/439215e15c5a900732776f9c595de17b.mp4?uid=12400121270"
+  - id: case2
+    name: 渔乡守真心
+    video_url: "https://tos.mobgi.com/tos_beijing/material_1/20260722/12400120711/12400121270/7ee2c33febef6fa6a65bb11b4be17458.mp4?uid=12400121270"
+  - id: case3
+    name: 一次伸手，一生情
+    video_url: "https://tos.mobgi.com/tos_beijing/material_1/20260724/12400120711/12400121270/0131d503eb5b3a5e075c8feb46408eab.mp4?uid=12400121270"
+  - id: case4
+    name: 新娘当场换新郎
+    video_url: "https://tos.mobgi.com/tos_beijing/material_1/20260724/12400120711/12400121270/fda76a5a7924de1f6b2d74cee0c1805f.mp4?uid=12400121270"
+  - id: case5
+    name: 爷爷不请七遍不动筷
+    video_url: "https://tos.mobgi.com/tos_beijing/material_1/20260724/12400120711/12400121270/2682c3684ee97e4b694899d56a2cccf4.mp4?uid=12400121270"
+  - id: case6
+    name: 狐狸抬轿
+    video_url: "https://tos.mobgi.com/tos_beijing/material_1/20260728/12400120711/12400121270/d188124c1043bbccfb01f63f04c9d619.mp4?uid=12400121270"
+  - id: case7
+    name: 别怪我心狠，谁让你动我三十万鱼苗
+    video_url: "https://tos.mobgi.com/tos_beijing/material_1/20260728/12400120711/12400121270/68d78e43b2e19171fd615c90cdcf8b06.mp4?uid=12400121270"
+
+# 模型别名 -> 火山方舟推理接入点 Endpoint ID（region: cn-beijing）。
+# 请替换成你自己的 Endpoint ID（ep-xxx）。不要提交真实 Endpoint ID 到公开仓库。
+models:
+  seed-2-1-pro: "your_seed_2_1_pro_endpoint_id"
+  seed-2-1-turbo: "your_seed_2_1_turbo_endpoint_id"
+  seed-evolving: "your_seed_evolving_endpoint_id"

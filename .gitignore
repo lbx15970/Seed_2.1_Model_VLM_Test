@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 环境与密钥（务必不要提交）
+.env
+
+# 内部文档（不对外发布）
+任务.md
+建库任务.md
+
+# 运行产物（可选：如需归档结果可注释掉下一行）
+results/*/
+!results/.gitkeep
