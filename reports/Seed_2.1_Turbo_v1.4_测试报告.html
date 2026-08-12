@@ -8,18 +8,23 @@
   :root {
     --bg:#0f1220; --card:#1a1f35; --card2:#222844; --ink:#e8ebf5; --muted:#9aa3c0;
     --line:#2c3358; --green:#37d67a; --red:#ff5c7c; --blue:#4d8dff; --gold:#ffb020;
-    --v14:#37d67a;
+    --white:#d7dcef; --v14:#37d67a;
   }
   * { box-sizing:border-box; }
   body { margin:0; background:linear-gradient(160deg,#0d1020,#141833 60%,#0f1328);
     color:var(--ink); font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;
     line-height:1.65; }
-  .wrap { max-width:1080px; margin:0 auto; padding:48px 24px 80px; }
+  .wrap { max-width:1180px; margin:0 auto; padding:48px 24px 80px; }
   header.hero { text-align:center; padding:40px 20px 28px; }
   .hero h1 { font-size:30px; margin:0 0 10px; letter-spacing:.5px; }
   .hero .sub { color:var(--muted); font-size:15px; }
-  .pill { display:inline-block; padding:4px 12px; border-radius:999px; font-size:12px;
+  .pill, .chip { display:inline-block; padding:4px 12px; border-radius:999px; font-size:12px;
     background:#20264a; color:var(--muted); margin:2px 4px; border:1px solid var(--line); }
+  .chip.good, .mini-pill.pred-good, .mini-pill.bench-good, .chip.bench-good { color:#0f1a12; background:var(--green); border-color:transparent; }
+  .chip.bad, .mini-pill.pred-bad, .mini-pill.bench-bad, .chip.bench-bad { color:#240814; background:var(--red); border-color:transparent; }
+  .chip.warn, .mini-pill.pred-yellow, .mini-pill.bench-yellow, .chip.bench-yellow { color:#241702; background:var(--gold); border-color:transparent; }
+  .mini-pill.pred-white, .mini-pill.bench-white, .chip.bench-white { color:#1a223e; background:var(--white); border-color:transparent; }
+  .mini-pill.pred-extra, .chip.pred-extra { color:#0d1733; background:var(--blue); border-color:transparent; }
   .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin:28px 0 8px; }
   .kpi { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px 18px; text-align:center; }
   .kpi .big { font-size:34px; font-weight:800; }
@@ -32,6 +37,7 @@
   section h2 { font-size:20px; margin:0 0 16px; display:flex; align-items:center; gap:10px; }
   section h2 .n { background:var(--blue); color:#fff; width:26px; height:26px; border-radius:8px;
     display:inline-flex; align-items:center; justify-content:center; font-size:14px; }
+  section h3 { font-size:15px; margin:0 0 10px; }
   p.lead { color:var(--muted); margin-top:-4px; }
   .bar-row { margin:14px 0; }
   .bar-label { font-size:14px; margin-bottom:6px; }
@@ -63,8 +69,33 @@
   .arrow { color:var(--muted); }
   .cols { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   .note { background:#171b38; border-left:3px solid var(--gold); padding:12px 16px; border-radius:8px; font-size:13.5px; color:var(--muted); }
+  .legend { margin-top:10px; }
+  .timeline-note { color:var(--muted); font-size:13px; margin-bottom:10px; }
+  .timeline-box { background:#11152a; border:1px solid var(--line); border-radius:14px; padding:14px; overflow:hidden; }
+  .timeline { width:100%; height:188px; display:block; }
+  .case-detail { border:1px solid var(--line); background:#161b31; border-radius:16px; margin:16px 0; overflow:hidden; }
+  .case-detail summary { list-style:none; cursor:pointer; padding:18px 20px; display:flex; gap:12px; align-items:flex-start; justify-content:space-between; }
+  .case-detail summary::-webkit-details-marker { display:none; }
+  .case-detail[open] summary { border-bottom:1px solid var(--line); background:#1b213d; }
+  .case-title { font-size:16px; font-weight:700; }
+  .case-summary-chips { text-align:right; }
+  .case-body { padding:18px 20px 22px; }
+  .case-cols { margin-top:14px; }
+  .compact th, .compact td { padding:8px 10px; font-size:12.5px; }
+  .mini-pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--line); }
+  .analysis-wrap { margin-top:16px; }
+  .analysis-card { background:#121732; border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-top:10px; }
+  .analysis-head { margin-bottom:8px; }
+  .analysis-body p { margin:8px 0; font-size:13px; }
+  a { color:#7db0ff; text-decoration:none; }
+  a:hover { text-decoration:underline; }
   footer { text-align:center; color:var(--muted); font-size:12px; margin-top:34px; }
-  @media (max-width:720px) { .kpis{grid-template-columns:repeat(2,1fr);} .cols{grid-template-columns:1fr;} }
+  @media (max-width:900px) {
+    .kpis{grid-template-columns:repeat(2,1fr);}
+    .cols{grid-template-columns:1fr;}
+    .case-detail summary{flex-direction:column;}
+    .case-summary-chips{text-align:left;}
+  }
 </style>
 </head>
 <body>
@@ -123,17 +154,474 @@
   </section>
 
   <section>
-    <h2><span class="n">2</span>优化效果：v1.4 逐 case 明细</h2>
-    <p class="lead">红色误命中集中清零；仅 case2「按手印被传送到海岛」这一设定奇观类片段仍被保留（1/15）。</p>
+    <h2><span class="n">2</span>优化效果：v1.4 逐 case 汇总</h2>
+    <p class="lead">先看 case 级指标，再往下看每个 case 的时间轴可视化和具体输出内容。</p>
     <table>
       <thead><tr><th>Case</th><th>剧名</th><th class="num">预测数</th><th class="num">🟢保留</th><th class="num">🔴误命中</th><th class="num">🟡保留</th><th class="num">⬜保留</th></tr></thead>
       <tbody><tr><td>case1</td><td>蒙眼望断江南雪</td><td class='num'>8</td><td class='num'>0/0</td><td class='num red'>0/1</td><td class='num'>0</td><td class='num'>1</td></tr><tr><td>case2</td><td>渔乡守真心</td><td class='num'>6</td><td class='num'>1/1</td><td class='num red'>1/4</td><td class='num'>0</td><td class='num'>0</td></tr><tr><td>case3</td><td>一次伸手，一生情</td><td class='num'>8</td><td class='num'>0/1</td><td class='num red'>0/3</td><td class='num'>0</td><td class='num'>2</td></tr><tr><td>case4</td><td>新娘当场换新郎</td><td class='num'>5</td><td class='num'>0/0</td><td class='num red'>0/2</td><td class='num'>1</td><td class='num'>1</td></tr><tr><td>case5</td><td>爷爷不请七遍不动筷</td><td class='num'>6</td><td class='num'>0/0</td><td class='num red'>0/2</td><td class='num'>0</td><td class='num'>1</td></tr><tr><td>case6</td><td>狐狸抬轿</td><td class='num'>6</td><td class='num'>0/0</td><td class='num red'>0/2</td><td class='num'>1</td><td class='num'>3</td></tr><tr><td>case7</td><td>别怪我心狠，谁让你动我三十万鱼苗</td><td class='num'>3</td><td class='num'>0/0</td><td class='num red'>0/1</td><td class='num'>0</td><td class='num'>0</td></tr></tbody>
     </table>
-    <div class="note" style="margin-top:16px">时间戳对齐（辅助指标）：加权均 IoU 0.583、加权类型准确率 75%。本项目的评测核心是“语义判准”而非时间精度，故 IoU 类指标仅作参考。</div>
+    <div class="note" style="margin-top:16px">下面每个 case 都加了可视化时间轴：上轨是 benchmark， 下轨是 v1.4 实际输出。可以直接看出哪些点被保住、哪些红点被误命中、以及哪些输出是 benchmark 外的额外召回。</div>
   </section>
 
   <section>
-    <h2><span class="n">3</span>自动化迭代是怎么产出 v1.4 的</h2>
+    <h2><span class="n">3</span>每个 Case 的可视化输出结果</h2>
+    <p class="lead">默认展开前两个 case。其余 case 点开即可看完整时间轴、输出列表、benchmark 对照和 badcase 诊断。</p>
+    
+    <details class="case-detail" open>
+      <summary>
+        <span class="case-title">case1 · 蒙眼望断江南雪</span>
+        <span class="case-summary-chips"><span class='chip '>预测 8</span><span class='chip good'>绿 0/0</span><span class='chip bad'>红 0/1</span><span class='chip warn'>黄 0</span><span class='chip '>白 1</span></span>
+      </summary>
+      <div class="case-body">
+        <div class="timeline-note">上轨是 benchmark，下轨是 v1.4 实际输出。鼠标悬停可看每个块的具体内容。</div>
+        <div class="timeline-box"><svg class='timeline' viewBox='0 0 1000 176' preserveAspectRatio='none'><rect x='110' y='44' width='860' height='24' rx='8' fill='#121732' stroke='#2c3358'></rect><rect x='110' y='96' width='860' height='24' rx='8' fill='#121732' stroke='#2c3358'></rect><text x='18' y='60' fill='#9aa3c0' font-size='12'>benchmark</text><text x='18' y='112' fill='#9aa3c0' font-size='12'>v1.4 输出</text><line x1='110.0' y1='34' x2='110.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='110.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>00:00</text><line x1='325.0' y1='34' x2='325.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='325.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>03:36</text><line x1='540.0' y1='34' x2='540.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='540.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>07:13</text><line x1='755.0' y1='34' x2='755.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='755.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>10:49</text><line x1='970.0' y1='34' x2='970.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='970.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>14:25</text><g><title>case1-h1 | 白色 | 03:27-03:37
+沈惊寒亮出契纸称叶家借寿十年期满，叶苍玄阴沉反问“老夫若是不认呢”
+结果：保留(中性)</title><rect x='315.8' y='44.0' width='9.9' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case1-h2 | 白色 | 10:43-11:18
+沈惊寒曝出萧擎天借三成武骨旧账，萧擎天震惊反问“你到底是谁”
+结果：删除(中性)</title><rect x='749.1' y='44.0' width='35.3' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case1-h3 | 白色 | 00:57-01:05
+叶家寿宴叶苍玄假意赐座，沈惊寒当众表明是来收账
+结果：删除(中性)</title><rect x='166.7' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case1-h4 | 白色 | 09:44-10:26
+萧擎天提出道歉、烧账、滚出江南三条件，拿匕首威胁沈惊寒
+结果：删除(中性)</title><rect x='690.5' y='44.0' width='41.7' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case1-h5 | 白色 | 06:39-06:45
+沈惊寒收走叶苍玄半条命转身离开，叶少轩怒喝“站住”
+结果：删除(中性)</title><rect x='506.6' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case1-h6 | 红色 | 07:40-08:00
+叶少轩吃亏后下令去请白老和萧擎天来撑腰
+结果：✓已规避</title><rect x='567.2' y='44.0' width='19.9' height='24' rx='6' ry='6' fill='#ff5c7c' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case1-h7 | 白色 | 13:40-13:44
+萧擎天认下沈少身份后与叶家断交，拿出银行卡递向沈惊寒
+结果：删除(中性)</title><rect x='925.1' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P1 | 额外输出 | 05:48-06:06
+type=爽点兑现前 | 对齐=未命中 benchmark
+沈惊寒落笔后会发生什么？叶苍玄真的会被还寿吗？</title><rect x='455.9' y='96.0' width='17.9' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P2 | 额外输出 | 11:18-12:32
+type=关系悬念 | 对齐=未命中 benchmark
+萧擎天为什么突然给沈惊寒下跪？他和沈家到底有什么渊源？</title><rect x='783.9' y='96.0' width='74.1' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect><text x='821.0' y='112.0' text-anchor='middle' fill='#13203f' font-size='11' font-weight='700'>P2</text></g><g><title>P3 | 额外输出 | 10:18-10:56
+type=信息悬念 | 对齐=未命中 benchmark
+沈惊寒说的借武骨之事是真的吗？萧擎天会有什么反应？</title><rect x='724.3' y='96.0' width='38.3' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P4 | 命中白色 | 03:20-03:48
+type=冲突悬念 | 对齐=case1-h1
+沈惊寒真的有能力让叶苍玄还命吗？叶家会如何应对这场逼债？</title><rect x='308.8' y='96.0' width='27.3' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P5 | 额外输出 | 06:20-06:44
+type=冲突悬念 | 对齐=未命中 benchmark
+沈惊寒能顺利离开万寿楼吗？叶少轩的手下能不能拦住他？</title><rect x='487.7' y='96.0' width='23.4' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P6 | 额外输出 | 02:48-03:04
+type=冲突悬念 | 对齐=未命中 benchmark
+沈惊寒有什么办法让叶苍玄认下借寿的账？借寿之说是否属实？</title><rect x='277.0' y='96.0' width='15.9' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P7 | 额外输出 | 08:57-09:14
+type=危机爆发 | 对齐=未命中 benchmark
+萧擎天是什么人？他深夜带人来找沈惊寒有什么目的？</title><rect x='643.8' y='96.0' width='16.4' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P8 | 额外输出 | 07:24-07:34
+type=结果悬念 | 对齐=未命中 benchmark
+叶家会不会在三天内交出一半家产？沈惊寒下次来会收什么？</title><rect x='551.3' y='96.0' width='10.4' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g></svg></div>
+        <div class="legend">
+          <span class='chip bench-good'>benchmark-绿</span>
+          <span class='chip bench-bad'>benchmark-红</span>
+          <span class='chip bench-yellow'>benchmark-黄</span>
+          <span class='chip bench-white'>benchmark-白</span>
+          <span class='chip pred-good'>输出命中绿</span>
+          <span class='chip pred-bad'>输出误命中红</span>
+          <span class='chip pred-extra'>输出额外命中外</span>
+        </div>
+        <div class="cols case-cols">
+          <div>
+            <h3>v1.4 输出列表</h3>
+            <table class="compact">
+              <thead><tr><th>序号</th><th>时间</th><th>类型</th><th>状态</th><th>对齐</th><th>IoU</th><th>open_question / 描述</th></tr></thead>
+              <tbody><tr><td class='num'>P1</td><td class='num'>05:48 - 06:06</td><td>爽点兑现前</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>沈惊寒落笔后会发生什么？叶苍玄真的会被还寿吗？</td></tr><tr><td class='num'>P2</td><td class='num'>11:18 - 12:32</td><td>关系悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>萧擎天为什么突然给沈惊寒下跪？他和沈家到底有什么渊源？</td></tr><tr><td class='num'>P3</td><td class='num'>10:18 - 10:56</td><td>信息悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>沈惊寒说的借武骨之事是真的吗？萧擎天会有什么反应？</td></tr><tr><td class='num'>P4</td><td class='num'>03:20 - 03:48</td><td>冲突悬念</td><td><span class='mini-pill pred-white'>命中白色</span></td><td>case1-h1</td><td>0.364</td><td>沈惊寒真的有能力让叶苍玄还命吗？叶家会如何应对这场逼债？</td></tr><tr><td class='num'>P5</td><td class='num'>06:20 - 06:44</td><td>冲突悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>沈惊寒能顺利离开万寿楼吗？叶少轩的手下能不能拦住他？</td></tr><tr><td class='num'>P6</td><td class='num'>02:48 - 03:04</td><td>冲突悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>沈惊寒有什么办法让叶苍玄认下借寿的账？借寿之说是否属实？</td></tr><tr><td class='num'>P7</td><td class='num'>08:57 - 09:14</td><td>危机爆发</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>萧擎天是什么人？他深夜带人来找沈惊寒有什么目的？</td></tr><tr><td class='num'>P8</td><td class='num'>07:24 - 07:34</td><td>结果悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>叶家会不会在三天内交出一半家产？沈惊寒下次来会收什么？</td></tr></tbody>
+            </table>
+          </div>
+          <div>
+            <h3>benchmark 对照</h3>
+            <table class="compact">
+              <thead><tr><th>ID</th><th>颜色</th><th>时间</th><th>结果</th><th>命中输出</th><th>内容</th></tr></thead>
+              <tbody><tr><td>case1-h1</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>03:27 - 03:37</td><td>保留(中性)</td><td>P4</td><td>沈惊寒亮出契纸称叶家借寿十年期满，叶苍玄阴沉反问“老夫若是不认呢”</td></tr><tr><td>case1-h2</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>10:43 - 11:18</td><td>删除(中性)</td><td>-</td><td>沈惊寒曝出萧擎天借三成武骨旧账，萧擎天震惊反问“你到底是谁”</td></tr><tr><td>case1-h3</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>00:57 - 01:05</td><td>删除(中性)</td><td>-</td><td>叶家寿宴叶苍玄假意赐座，沈惊寒当众表明是来收账</td></tr><tr><td>case1-h4</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>09:44 - 10:26</td><td>删除(中性)</td><td>-</td><td>萧擎天提出道歉、烧账、滚出江南三条件，拿匕首威胁沈惊寒</td></tr><tr><td>case1-h5</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>06:39 - 06:45</td><td>删除(中性)</td><td>-</td><td>沈惊寒收走叶苍玄半条命转身离开，叶少轩怒喝“站住”</td></tr><tr><td>case1-h6</td><td><span class='mini-pill bench-bad'>红色</span></td><td class='num'>07:40 - 08:00</td><td>✓已规避</td><td>-</td><td>叶少轩吃亏后下令去请白老和萧擎天来撑腰</td></tr><tr><td>case1-h7</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>13:40 - 13:44</td><td>删除(中性)</td><td>-</td><td>萧擎天认下沈少身份后与叶家断交，拿出银行卡递向沈惊寒</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        
+      </div>
+    </details>
+    
+    <details class="case-detail" open>
+      <summary>
+        <span class="case-title">case2 · 渔乡守真心</span>
+        <span class="case-summary-chips"><span class='chip '>预测 6</span><span class='chip good'>绿 1/1</span><span class='chip bad'>红 1/4</span><span class='chip warn'>黄 0</span><span class='chip '>白 0</span></span>
+      </summary>
+      <div class="case-body">
+        <div class="timeline-note">上轨是 benchmark，下轨是 v1.4 实际输出。鼠标悬停可看每个块的具体内容。</div>
+        <div class="timeline-box"><svg class='timeline' viewBox='0 0 1000 176' preserveAspectRatio='none'><rect x='110' y='44' width='860' height='24' rx='8' fill='#121732' stroke='#2c3358'></rect><rect x='110' y='96' width='860' height='24' rx='8' fill='#121732' stroke='#2c3358'></rect><text x='18' y='60' fill='#9aa3c0' font-size='12'>benchmark</text><text x='18' y='112' fill='#9aa3c0' font-size='12'>v1.4 输出</text><line x1='110.0' y1='34' x2='110.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='110.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>00:00</text><line x1='325.0' y1='34' x2='325.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='325.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>07:04</text><line x1='540.0' y1='34' x2='540.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='540.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>14:07</text><line x1='755.0' y1='34' x2='755.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='755.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>21:11</text><line x1='970.0' y1='34' x2='970.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='970.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>28:15</text><g><title>case2-h1 | 绿色 | 13:49-14:12
+海上突发龙卷风小船快被掀翻，牛八一喊着要连人带船进海岛空间
+结果：✓保留</title><rect x='530.7' y='44.0' width='11.7' height='24' rx='6' ry='6' fill='#37d67a' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case2-h2 | 红色 | 16:40-17:04
+陈大贵和后妈当众嘲讽牛八一吹牛没带回货，等着看笑话
+结果：✓已规避</title><rect x='617.5' y='44.0' width='12.2' height='24' rx='6' ry='6' fill='#ff5c7c' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case2-h3 | 红色 | 07:57-08:02
+牛八一提出借真真家船出海鱼获分八成，真真满脸震惊
+结果：✓已规避</title><rect x='352.1' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#ff5c7c' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case2-h4 | 白色 | 22:08-22:11
+牛八一答应分八成鱼获给何家，说要再加一句话，众人好奇
+结果：删除(中性)</title><rect x='783.9' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case2-h5 | 红色 | 00:44-00:49
+牛八一按完断亲手印凭空消失被传送到陌生热带海岛
+结果：✗误命中</title><rect x='132.3' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#ff5c7c' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case2-h6 | 红色 | 05:27-05:38
+牛八一把海岛空间海水倒在海边盼引来鱼，紧张盯水面
+结果：✓已规避</title><rect x='275.9' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#ff5c7c' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case2-h7 | 白色 | 26:40-26:54
+牛八一向村支书提出批宅基地盖房，村支书皱眉说不好办
+结果：删除(中性)</title><rect x='921.9' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P1 | 额外输出 | 00:00-00:27
+type=冲突悬念 | 对齐=未命中 benchmark
+牛八一会不会按下断亲文书的手印，真的和牛家断绝关系？</title><rect x='110.0' y='96.0' width='13.7' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P2 | 误命中红色 | 00:43-00:49
+type=信息悬念 | 对齐=case2-h5
+牛八一为什么会突然出现在陌生海岛上，这是什么地方，他还能不能回到原来的地方？</title><rect x='131.8' y='96.0' width='8.0' height='24' rx='6' ry='6' fill='#ff5c7c' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P3 | 额外输出 | 09:40-10:04
+type=结果悬念 | 对齐=未命中 benchmark
+发光的海水会把牛八一带到哪里，他这次出海能不能找到值钱的海货？</title><rect x='404.3' y='96.0' width='12.2' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P4 | 命中绿色 | 13:28-14:13
+type=危机爆发 | 对齐=case2-h1
+牛八一能不能成功启动海岛空间，连人带船躲过鼓龙风，平安返回岸边？</title><rect x='520.0' y='96.0' width='22.8' height='24' rx='6' ry='6' fill='#37d67a' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P5 | 额外输出 | 21:57-22:12
+type=利益期待 | 对齐=未命中 benchmark
+牛八一分给何家八成卖鱼钱，还要附加什么条件？</title><rect x='778.3' y='96.0' width='8.0' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P6 | 额外输出 | 22:15-22:47
+type=关系悬念 | 对齐=未命中 benchmark
+何叔会不会同意牛八一和真真的婚事？</title><rect x='787.5' y='96.0' width='16.2' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g></svg></div>
+        <div class="legend">
+          <span class='chip bench-good'>benchmark-绿</span>
+          <span class='chip bench-bad'>benchmark-红</span>
+          <span class='chip bench-yellow'>benchmark-黄</span>
+          <span class='chip bench-white'>benchmark-白</span>
+          <span class='chip pred-good'>输出命中绿</span>
+          <span class='chip pred-bad'>输出误命中红</span>
+          <span class='chip pred-extra'>输出额外命中外</span>
+        </div>
+        <div class="cols case-cols">
+          <div>
+            <h3>v1.4 输出列表</h3>
+            <table class="compact">
+              <thead><tr><th>序号</th><th>时间</th><th>类型</th><th>状态</th><th>对齐</th><th>IoU</th><th>open_question / 描述</th></tr></thead>
+              <tbody><tr><td class='num'>P1</td><td class='num'>00:00 - 00:27</td><td>冲突悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>牛八一会不会按下断亲文书的手印，真的和牛家断绝关系？</td></tr><tr><td class='num'>P2</td><td class='num'>00:43 - 00:49</td><td>信息悬念</td><td><span class='mini-pill pred-bad'>误命中红色</span></td><td>case2-h5</td><td>0.833</td><td>牛八一为什么会突然出现在陌生海岛上，这是什么地方，他还能不能回到原来的地方？</td></tr><tr><td class='num'>P3</td><td class='num'>09:40 - 10:04</td><td>结果悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>发光的海水会把牛八一带到哪里，他这次出海能不能找到值钱的海货？</td></tr><tr><td class='num'>P4</td><td class='num'>13:28 - 14:13</td><td>危机爆发</td><td><span class='mini-pill pred-good'>命中绿色</span></td><td>case2-h1</td><td>0.511</td><td>牛八一能不能成功启动海岛空间，连人带船躲过鼓龙风，平安返回岸边？</td></tr><tr><td class='num'>P5</td><td class='num'>21:57 - 22:12</td><td>利益期待</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>牛八一分给何家八成卖鱼钱，还要附加什么条件？</td></tr><tr><td class='num'>P6</td><td class='num'>22:15 - 22:47</td><td>关系悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>何叔会不会同意牛八一和真真的婚事？</td></tr></tbody>
+            </table>
+          </div>
+          <div>
+            <h3>benchmark 对照</h3>
+            <table class="compact">
+              <thead><tr><th>ID</th><th>颜色</th><th>时间</th><th>结果</th><th>命中输出</th><th>内容</th></tr></thead>
+              <tbody><tr><td>case2-h1</td><td><span class='mini-pill bench-good'>绿色</span></td><td class='num'>13:49 - 14:12</td><td>✓保留</td><td>P4</td><td>海上突发龙卷风小船快被掀翻，牛八一喊着要连人带船进海岛空间</td></tr><tr><td>case2-h2</td><td><span class='mini-pill bench-bad'>红色</span></td><td class='num'>16:40 - 17:04</td><td>✓已规避</td><td>-</td><td>陈大贵和后妈当众嘲讽牛八一吹牛没带回货，等着看笑话</td></tr><tr><td>case2-h3</td><td><span class='mini-pill bench-bad'>红色</span></td><td class='num'>07:57 - 08:02</td><td>✓已规避</td><td>-</td><td>牛八一提出借真真家船出海鱼获分八成，真真满脸震惊</td></tr><tr><td>case2-h4</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>22:08 - 22:11</td><td>删除(中性)</td><td>-</td><td>牛八一答应分八成鱼获给何家，说要再加一句话，众人好奇</td></tr><tr><td>case2-h5</td><td><span class='mini-pill bench-bad'>红色</span></td><td class='num'>00:44 - 00:49</td><td>✗误命中</td><td>P2</td><td>牛八一按完断亲手印凭空消失被传送到陌生热带海岛</td></tr><tr><td>case2-h6</td><td><span class='mini-pill bench-bad'>红色</span></td><td class='num'>05:27 - 05:38</td><td>✓已规避</td><td>-</td><td>牛八一把海岛空间海水倒在海边盼引来鱼，紧张盯水面</td></tr><tr><td>case2-h7</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>26:40 - 26:54</td><td>删除(中性)</td><td>-</td><td>牛八一向村支书提出批宅基地盖房，村支书皱眉说不好办</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class='analysis-wrap'><h3>该 case 的 badcase 诊断</h3><div class='analysis-card'><div class='analysis-head'><span class='chip warn'>红色误命中</span> <span class='chip '>case2-h5</span> <span class='chip '>Pro判定: drop</span> <span class='chip '>与人工: 一致</span></div><div class='analysis-body'><p><b>人工内容：</b>牛八一按完断亲手印凭空消失被传送到陌生热带海岛</p><p><b>证据：</b>观众全程目睹男子按手印、触发传送、抵达海岛的完整过程，“按手印会被传送到海岛空间”的核心反转信息已完全揭晓，最具冲击力的奇观场景在片段中段就已展示完毕，结尾仅停留在主角自身错愕回想的反应阶段，对观众而言无信息差、无即时待解的具体悬念。</p><p><b>提示词改进：</b>新增一条排除规则：判定信息悬念类hook时，必须以观众的信息差为核心判断依据：若事件的完整起因、经过、结果已全部向观众展示（观众全程目睹事件全过程，不存在对观众保密的关键信息），即使剧中角色尚未反应过来、处于错愕/疑惑/回想状态，只要结尾没有出现新的未知刺激、迫在眉睫的冲突或具体的待做选择，就不得判定为有效hook；需特别注意，核心反转/奇观（如传送、穿越、身份揭露）的最佳停顿点是反转即将发生、或反转刚发生尚未给观众展示完整结果的时刻，若反转结果已完整展示（如已清晰呈现传送后的场景、已打出说明性字幕），后续的角色反应段属于高潮过后的余韵，应当排除，避免将“主角尚未反应过来但观众已看完全程”的段落误判为有效信息悬念。</p><p class='muted'><a href='../results/_clips/case2_case2-h5_red_kept.mp4' target='_blank'>badcase 片段</a></p></div></div></div>
+      </div>
+    </details>
+    
+    <details class="case-detail" >
+      <summary>
+        <span class="case-title">case3 · 一次伸手，一生情</span>
+        <span class="case-summary-chips"><span class='chip '>预测 8</span><span class='chip good'>绿 0/1</span><span class='chip bad'>红 0/3</span><span class='chip warn'>黄 0</span><span class='chip '>白 2</span></span>
+      </summary>
+      <div class="case-body">
+        <div class="timeline-note">上轨是 benchmark，下轨是 v1.4 实际输出。鼠标悬停可看每个块的具体内容。</div>
+        <div class="timeline-box"><svg class='timeline' viewBox='0 0 1000 176' preserveAspectRatio='none'><rect x='110' y='44' width='860' height='24' rx='8' fill='#121732' stroke='#2c3358'></rect><rect x='110' y='96' width='860' height='24' rx='8' fill='#121732' stroke='#2c3358'></rect><text x='18' y='60' fill='#9aa3c0' font-size='12'>benchmark</text><text x='18' y='112' fill='#9aa3c0' font-size='12'>v1.4 输出</text><line x1='110.0' y1='34' x2='110.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='110.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>00:00</text><line x1='325.0' y1='34' x2='325.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='325.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>06:10</text><line x1='540.0' y1='34' x2='540.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='540.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>12:21</text><line x1='755.0' y1='34' x2='755.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='755.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>18:31</text><line x1='970.0' y1='34' x2='970.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='970.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>24:42</text><g><title>case3-h1 | 绿色 | 05:38-05:46
+总裁认定外卖员撞了父亲还劫财，下令备机赶去云城要他付出代价
+结果：✗漏保留</title><rect x='306.2' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#37d67a' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case3-h2 | 白色 | 06:45-06:55
+富家女带保镖找上门认定外卖员撞父亲，放话律师函马上到
+结果：保留(中性)</title><rect x='345.1' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case3-h3 | 白色 | 09:18-09:30
+外卖员本指望行车记录仪证清白，却被告知录像已被覆盖
+结果：删除(中性)</title><rect x='433.9' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case3-h4 | 红色 | 11:54-12:00
+原告怒斥张政一家哭没用，病房老人监护仪突然波动
+结果：✓已规避</title><rect x='524.5' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#ff5c7c' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case3-h5 | 白色 | 13:48-14:18
+原告拿出肇事逃逸照片当证据，妻子动摇追问怎么回事
+结果：删除(中性)</title><rect x='590.6' y='44.0' width='17.4' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case3-h6 | 红色 | 14:52-15:05
+外卖员含泪认罪，女儿突然站出来称人是自己撞的、爸替她顶罪
+结果：✓已规避</title><rect x='627.8' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#ff5c7c' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case3-h7 | 白色 | 15:29-15:40
+法官正要宣判，被救老人突然出现在法庭门口全场惊呆
+结果：删除(中性)</title><rect x='649.3' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case3-h8 | 白色 | 16:00-16:55
+老人当庭晕倒急需救心丸，原告一把打翻药瓶
+结果：保留(中性)</title><rect x='667.3' y='44.0' width='31.9' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case3-h9 | 红色 | 18:56-19:08
+医生当众说出真相老人亲口称外卖员是救命恩人，原告全家傻眼
+结果：✓已规避</title><rect x='769.4' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#ff5c7c' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case3-h10 | 白色 | 23:25-23:31
+房东得知外卖员是萧家救命恩人当场吓慌，楼梯口传来脚步声
+结果：删除(中性)</title><rect x='925.6' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P1 | 额外输出 | 14:33-14:57
+type=冲突悬念 | 对齐=未命中 benchmark
+明明是被冤枉的张政，为什么会突然选择认罪？</title><rect x='616.8' y='96.0' width='13.9' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P2 | 命中白色 | 15:59-16:34
+type=危机爆发 | 对齐=case3-h8
+张政一家会不会拿出救心丸救治萧云国？萧云国能否挺过这次危机？</title><rect x='666.7' y='96.0' width='20.3' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P3 | 额外输出 | 13:22-13:48
+type=冲突悬念 | 对齐=未命中 benchmark
+张政该如何解释这张对他极为不利的照片，证明自己的清白？</title><rect x='575.5' y='96.0' width='15.1' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P4 | 额外输出 | 18:06-19:05
+type=爽点兑现前 | 对齐=未命中 benchmark
+真相大白后，原告方会有什么反应？张政能否当场沉冤得雪？</title><rect x='740.4' y='96.0' width='34.2' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P5 | 命中白色 | 06:27-06:54
+type=冲突悬念 | 对齐=case3-h2
+被冤枉的张政将如何应对萧家的指控和施压？</title><rect x='334.6' y='96.0' width='15.7' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P6 | 额外输出 | 00:00-00:16
+type=信息悬念 | 对齐=未命中 benchmark
+张政好心扶老人为何反而沦为被告穿上囚服？</title><rect x='110.0' y='96.0' width='9.3' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P7 | 额外输出 | 22:36-23:09
+type=冲突悬念 | 对齐=未命中 benchmark
+刚沉冤得雪的张政一家，要如何面对被邻居排挤、无家可归的困境？</title><rect x='897.1' y='96.0' width='19.2' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P8 | 额外输出 | 05:13-05:45
+type=冲突悬念 | 对齐=未命中 benchmark
+萧平安赶到云城后会如何对付被他误认为是肇事者的张政？</title><rect x='291.7' y='96.0' width='18.6' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g></svg></div>
+        <div class="legend">
+          <span class='chip bench-good'>benchmark-绿</span>
+          <span class='chip bench-bad'>benchmark-红</span>
+          <span class='chip bench-yellow'>benchmark-黄</span>
+          <span class='chip bench-white'>benchmark-白</span>
+          <span class='chip pred-good'>输出命中绿</span>
+          <span class='chip pred-bad'>输出误命中红</span>
+          <span class='chip pred-extra'>输出额外命中外</span>
+        </div>
+        <div class="cols case-cols">
+          <div>
+            <h3>v1.4 输出列表</h3>
+            <table class="compact">
+              <thead><tr><th>序号</th><th>时间</th><th>类型</th><th>状态</th><th>对齐</th><th>IoU</th><th>open_question / 描述</th></tr></thead>
+              <tbody><tr><td class='num'>P1</td><td class='num'>14:33 - 14:57</td><td>冲突悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>明明是被冤枉的张政，为什么会突然选择认罪？</td></tr><tr><td class='num'>P2</td><td class='num'>15:59 - 16:34</td><td>危机爆发</td><td><span class='mini-pill pred-white'>命中白色</span></td><td>case3-h8</td><td>0.607</td><td>张政一家会不会拿出救心丸救治萧云国？萧云国能否挺过这次危机？</td></tr><tr><td class='num'>P3</td><td class='num'>13:22 - 13:48</td><td>冲突悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>张政该如何解释这张对他极为不利的照片，证明自己的清白？</td></tr><tr><td class='num'>P4</td><td class='num'>18:06 - 19:05</td><td>爽点兑现前</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>真相大白后，原告方会有什么反应？张政能否当场沉冤得雪？</td></tr><tr><td class='num'>P5</td><td class='num'>06:27 - 06:54</td><td>冲突悬念</td><td><span class='mini-pill pred-white'>命中白色</span></td><td>case3-h2</td><td>0.321</td><td>被冤枉的张政将如何应对萧家的指控和施压？</td></tr><tr><td class='num'>P6</td><td class='num'>00:00 - 00:16</td><td>信息悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>张政好心扶老人为何反而沦为被告穿上囚服？</td></tr><tr><td class='num'>P7</td><td class='num'>22:36 - 23:09</td><td>冲突悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>刚沉冤得雪的张政一家，要如何面对被邻居排挤、无家可归的困境？</td></tr><tr><td class='num'>P8</td><td class='num'>05:13 - 05:45</td><td>冲突悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>萧平安赶到云城后会如何对付被他误认为是肇事者的张政？</td></tr></tbody>
+            </table>
+          </div>
+          <div>
+            <h3>benchmark 对照</h3>
+            <table class="compact">
+              <thead><tr><th>ID</th><th>颜色</th><th>时间</th><th>结果</th><th>命中输出</th><th>内容</th></tr></thead>
+              <tbody><tr><td>case3-h1</td><td><span class='mini-pill bench-good'>绿色</span></td><td class='num'>05:38 - 05:46</td><td>✗漏保留</td><td>-</td><td>总裁认定外卖员撞了父亲还劫财，下令备机赶去云城要他付出代价</td></tr><tr><td>case3-h2</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>06:45 - 06:55</td><td>保留(中性)</td><td>P5</td><td>富家女带保镖找上门认定外卖员撞父亲，放话律师函马上到</td></tr><tr><td>case3-h3</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>09:18 - 09:30</td><td>删除(中性)</td><td>-</td><td>外卖员本指望行车记录仪证清白，却被告知录像已被覆盖</td></tr><tr><td>case3-h4</td><td><span class='mini-pill bench-bad'>红色</span></td><td class='num'>11:54 - 12:00</td><td>✓已规避</td><td>-</td><td>原告怒斥张政一家哭没用，病房老人监护仪突然波动</td></tr><tr><td>case3-h5</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>13:48 - 14:18</td><td>删除(中性)</td><td>-</td><td>原告拿出肇事逃逸照片当证据，妻子动摇追问怎么回事</td></tr><tr><td>case3-h6</td><td><span class='mini-pill bench-bad'>红色</span></td><td class='num'>14:52 - 15:05</td><td>✓已规避</td><td>-</td><td>外卖员含泪认罪，女儿突然站出来称人是自己撞的、爸替她顶罪</td></tr><tr><td>case3-h7</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>15:29 - 15:40</td><td>删除(中性)</td><td>-</td><td>法官正要宣判，被救老人突然出现在法庭门口全场惊呆</td></tr><tr><td>case3-h8</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>16:00 - 16:55</td><td>保留(中性)</td><td>P2</td><td>老人当庭晕倒急需救心丸，原告一把打翻药瓶</td></tr><tr><td>case3-h9</td><td><span class='mini-pill bench-bad'>红色</span></td><td class='num'>18:56 - 19:08</td><td>✓已规避</td><td>-</td><td>医生当众说出真相老人亲口称外卖员是救命恩人，原告全家傻眼</td></tr><tr><td>case3-h10</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>23:25 - 23:31</td><td>删除(中性)</td><td>-</td><td>房东得知外卖员是萧家救命恩人当场吓慌，楼梯口传来脚步声</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class='analysis-wrap'><h3>该 case 的 badcase 诊断</h3><div class='analysis-card'><div class='analysis-head'><span class='chip warn'>绿色漏保留</span> <span class='chip '>case3-h1</span> <span class='chip '>Pro判定: keep</span> <span class='chip '>与人工: 一致</span></div><div class='analysis-body'><p><b>人工内容：</b>总裁认定外卖员撞了父亲还劫财，下令备机赶去云城要他付出代价</p><p><b>证据：</b>片段结束于总裁得知父亲被撞遭劫财的核心冲突后，震怒之下下达出发指令、放话要让对方付出代价的情绪顶点，追责行动尚未展开、肇事真凶身份也未完全确认，悬念充足，能有效驱动观众追看。</p><p><b>提示词改进：</b>新增一条保护规则：若片段结尾落在强势主角（如总裁、掌权者）因切身核心利益受损（如亲人遇害、财物被夺、被人背叛）而情绪爆发，当众下达明确行动指令（如备机、召集人手、动身前往某地）、放话要追责/复仇的瞬间，即使尚未出现后续行动的画面，也属于有效hook，应予以保留——此类节点已完成冲突动因的交代，后续的行动过程、追责结果、可能的真相反转均是观众的强期待内容，不得误判为普通情绪表达或过渡段落删除。</p><p class='muted'><a href='../results/_clips/case3_case3-h1_green_missed.mp4' target='_blank'>badcase 片段</a></p></div></div></div>
+      </div>
+    </details>
+    
+    <details class="case-detail" >
+      <summary>
+        <span class="case-title">case4 · 新娘当场换新郎</span>
+        <span class="case-summary-chips"><span class='chip '>预测 5</span><span class='chip good'>绿 0/0</span><span class='chip bad'>红 0/2</span><span class='chip warn'>黄 1</span><span class='chip '>白 1</span></span>
+      </summary>
+      <div class="case-body">
+        <div class="timeline-note">上轨是 benchmark，下轨是 v1.4 实际输出。鼠标悬停可看每个块的具体内容。</div>
+        <div class="timeline-box"><svg class='timeline' viewBox='0 0 1000 176' preserveAspectRatio='none'><rect x='110' y='44' width='860' height='24' rx='8' fill='#121732' stroke='#2c3358'></rect><rect x='110' y='96' width='860' height='24' rx='8' fill='#121732' stroke='#2c3358'></rect><text x='18' y='60' fill='#9aa3c0' font-size='12'>benchmark</text><text x='18' y='112' fill='#9aa3c0' font-size='12'>v1.4 输出</text><line x1='110.0' y1='34' x2='110.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='110.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>00:00</text><line x1='325.0' y1='34' x2='325.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='325.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>02:56</text><line x1='540.0' y1='34' x2='540.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='540.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>05:52</text><line x1='755.0' y1='34' x2='755.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='755.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>08:48</text><line x1='970.0' y1='34' x2='970.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='970.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>11:44</text><g><title>case4-h1 | 白色 | 11:02-11:10
+江离成闯到酒店化妆间看到盛装的沈念，震惊喊出她名字
+结果：保留(中性)</title><rect x='919.3' y='44.0' width='9.8' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case4-h2 | 白色 | 01:03-01:08
+被新郎和闺蜜接连寒心，新娘沈念掏出手机发消息喊人来抢亲
+结果：删除(中性)</title><rect x='187.0' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case4-h3 | 白色 | 03:20-03:23
+沈念当面质问江离成：现在跟自己走，还是继续等伴娘苏婉婉
+结果：删除(中性)</title><rect x='354.5' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case4-h4 | 白色 | 04:45-04:51
+沈念表示过往忍让到此为止，江离成震怒，沈念低头操作手机
+结果：删除(中性)</title><rect x='458.4' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case4-h5 | 黄色 | 06:37-06:44
+青梅竹马顾砚准时赶到，向穿婚纱的沈念伸手邀她跟自己走
+结果：保留(可选)</title><rect x='595.3' y='44.0' width='8.6' height='24' rx='6' ry='6' fill='#ffb020' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case4-h6 | 红色 | 02:00-02:07
+吉时将近，苏婉婉当众称补错眼线颜色要换黑色重新补妆
+结果：✓已规避</title><rect x='256.7' y='44.0' width='8.6' height='24' rx='6' ry='6' fill='#ff5c7c' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case4-h7 | 白色 | 08:43-08:50
+江离成拼命挣脱阻拦要追沈念，沈父冷着脸说“不用了”
+结果：删除(中性)</title><rect x='749.3' y='44.0' width='9.2' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case4-h8 | 红色 | 07:21-07:26
+江离成怒问顾砚凭什么带走沈念，顾砚笑答“凭我 8:58 到”
+结果：✓已规避</title><rect x='649.1' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#ff5c7c' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P1 | 命中黄色 | 06:27-06:45
+type=冲突悬念 | 对齐=case4-h5
+沈念会不会握住顾砚的手，跟他离开？</title><rect x='583.1' y='96.0' width='22.0' height='24' rx='6' ry='6' fill='#ffb020' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P2 | 额外输出 | 06:10-06:26
+type=信息悬念 | 对齐=未命中 benchmark
+突然响起的礼炮是谁安排的？门外的人是不是沈念找来的？</title><rect x='562.3' y='96.0' width='19.6' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P3 | 命中白色 | 10:55-11:10
+type=冲突悬念 | 对齐=case4-h1
+江离成闯进来找沈念有什么目的？沈念会怎么回应他？</title><rect x='910.7' y='96.0' width='18.3' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P4 | 额外输出 | 05:22-05:35
+type=冲突悬念 | 对齐=未命中 benchmark
+沈念真的会不用新郎接，独自出阁吗？</title><rect x='503.6' y='96.0' width='15.9' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P5 | 额外输出 | 08:22-08:34
+type=结果悬念 | 对齐=未命中 benchmark
+顾砚真的准备好了所有婚礼事宜吗？沈念会不会答应和他结婚？</title><rect x='723.7' y='96.0' width='14.7' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g></svg></div>
+        <div class="legend">
+          <span class='chip bench-good'>benchmark-绿</span>
+          <span class='chip bench-bad'>benchmark-红</span>
+          <span class='chip bench-yellow'>benchmark-黄</span>
+          <span class='chip bench-white'>benchmark-白</span>
+          <span class='chip pred-good'>输出命中绿</span>
+          <span class='chip pred-bad'>输出误命中红</span>
+          <span class='chip pred-extra'>输出额外命中外</span>
+        </div>
+        <div class="cols case-cols">
+          <div>
+            <h3>v1.4 输出列表</h3>
+            <table class="compact">
+              <thead><tr><th>序号</th><th>时间</th><th>类型</th><th>状态</th><th>对齐</th><th>IoU</th><th>open_question / 描述</th></tr></thead>
+              <tbody><tr><td class='num'>P1</td><td class='num'>06:27 - 06:45</td><td>冲突悬念</td><td><span class='mini-pill pred-yellow'>命中黄色</span></td><td>case4-h5</td><td>0.389</td><td>沈念会不会握住顾砚的手，跟他离开？</td></tr><tr><td class='num'>P2</td><td class='num'>06:10 - 06:26</td><td>信息悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>突然响起的礼炮是谁安排的？门外的人是不是沈念找来的？</td></tr><tr><td class='num'>P3</td><td class='num'>10:55 - 11:10</td><td>冲突悬念</td><td><span class='mini-pill pred-white'>命中白色</span></td><td>case4-h1</td><td>0.533</td><td>江离成闯进来找沈念有什么目的？沈念会怎么回应他？</td></tr><tr><td class='num'>P4</td><td class='num'>05:22 - 05:35</td><td>冲突悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>沈念真的会不用新郎接，独自出阁吗？</td></tr><tr><td class='num'>P5</td><td class='num'>08:22 - 08:34</td><td>结果悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>顾砚真的准备好了所有婚礼事宜吗？沈念会不会答应和他结婚？</td></tr></tbody>
+            </table>
+          </div>
+          <div>
+            <h3>benchmark 对照</h3>
+            <table class="compact">
+              <thead><tr><th>ID</th><th>颜色</th><th>时间</th><th>结果</th><th>命中输出</th><th>内容</th></tr></thead>
+              <tbody><tr><td>case4-h1</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>11:02 - 11:10</td><td>保留(中性)</td><td>P3</td><td>江离成闯到酒店化妆间看到盛装的沈念，震惊喊出她名字</td></tr><tr><td>case4-h2</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>01:03 - 01:08</td><td>删除(中性)</td><td>-</td><td>被新郎和闺蜜接连寒心，新娘沈念掏出手机发消息喊人来抢亲</td></tr><tr><td>case4-h3</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>03:20 - 03:23</td><td>删除(中性)</td><td>-</td><td>沈念当面质问江离成：现在跟自己走，还是继续等伴娘苏婉婉</td></tr><tr><td>case4-h4</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>04:45 - 04:51</td><td>删除(中性)</td><td>-</td><td>沈念表示过往忍让到此为止，江离成震怒，沈念低头操作手机</td></tr><tr><td>case4-h5</td><td><span class='mini-pill bench-yellow'>黄色</span></td><td class='num'>06:37 - 06:44</td><td>保留(可选)</td><td>P1</td><td>青梅竹马顾砚准时赶到，向穿婚纱的沈念伸手邀她跟自己走</td></tr><tr><td>case4-h6</td><td><span class='mini-pill bench-bad'>红色</span></td><td class='num'>02:00 - 02:07</td><td>✓已规避</td><td>-</td><td>吉时将近，苏婉婉当众称补错眼线颜色要换黑色重新补妆</td></tr><tr><td>case4-h7</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>08:43 - 08:50</td><td>删除(中性)</td><td>-</td><td>江离成拼命挣脱阻拦要追沈念，沈父冷着脸说“不用了”</td></tr><tr><td>case4-h8</td><td><span class='mini-pill bench-bad'>红色</span></td><td class='num'>07:21 - 07:26</td><td>✓已规避</td><td>-</td><td>江离成怒问顾砚凭什么带走沈念，顾砚笑答“凭我 8:58 到”</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        
+      </div>
+    </details>
+    
+    <details class="case-detail" >
+      <summary>
+        <span class="case-title">case5 · 爷爷不请七遍不动筷</span>
+        <span class="case-summary-chips"><span class='chip '>预测 6</span><span class='chip good'>绿 0/0</span><span class='chip bad'>红 0/2</span><span class='chip warn'>黄 0</span><span class='chip '>白 1</span></span>
+      </summary>
+      <div class="case-body">
+        <div class="timeline-note">上轨是 benchmark，下轨是 v1.4 实际输出。鼠标悬停可看每个块的具体内容。</div>
+        <div class="timeline-box"><svg class='timeline' viewBox='0 0 1000 176' preserveAspectRatio='none'><rect x='110' y='44' width='860' height='24' rx='8' fill='#121732' stroke='#2c3358'></rect><rect x='110' y='96' width='860' height='24' rx='8' fill='#121732' stroke='#2c3358'></rect><text x='18' y='60' fill='#9aa3c0' font-size='12'>benchmark</text><text x='18' y='112' fill='#9aa3c0' font-size='12'>v1.4 输出</text><line x1='110.0' y1='34' x2='110.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='110.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>00:00</text><line x1='325.0' y1='34' x2='325.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='325.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>04:21</text><line x1='540.0' y1='34' x2='540.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='540.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>08:42</text><line x1='755.0' y1='34' x2='755.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='755.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>13:03</text><line x1='970.0' y1='34' x2='970.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='970.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>17:24</text><g><title>case5-h1 | 红色 | 00:12-00:17
+沈家七遍请饭规矩在新媳妇进门当天被打破，媳妇当场收爷爷碗
+结果：✓已规避</title><rect x='119.9' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#ff5c7c' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case5-h2 | 白色 | 09:56-10:07
+女主当众暗指等爷爷开饭把菜等凉，爷爷脸色骤沉放下筷子
+结果：保留(中性)</title><rect x='600.9' y='44.0' width='9.1' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case5-h3 | 白色 | 11:01-11:13
+女主提起两人四年感情说吃饭规矩得谈谈，男主误以为她后悔
+结果：删除(中性)</title><rect x='654.4' y='44.0' width='9.9' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case5-h4 | 红色 | 13:07-13:18
+爷爷当众给新孙媳下马威，称进沈家门就要懂沈家规矩
+结果：✓已规避</title><rect x='758.2' y='44.0' width='9.1' height='24' rx='6' ry='6' fill='#ff5c7c' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case5-h5 | 白色 | 14:30-14:42
+婆婆嗓子哑仍要请爷爷吃饭，女主突然放下水果刀走向阳台
+结果：删除(中性)</title><rect x='826.5' y='44.0' width='9.9' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case5-h6 | 白色 | 14:40-14:54
+女主打破规矩只叫爷爷一遍吃饭，公公和爷爷当场愣住
+结果：删除(中性)</title><rect x='834.7' y='44.0' width='11.5' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P1 | 额外输出 | 14:40-16:34
+type=冲突悬念 | 对齐=未命中 benchmark
+爷爷会如何回应裴筠的反驳？这场关于沈家规矩的对峙最终会是什么结果？</title><rect x='834.7' y='96.0' width='94.3' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect><text x='881.9' y='112.0' text-anchor='middle' fill='#13203f' font-size='11' font-weight='700'>P1</text></g><g><title>P2 | 额外输出 | 13:46-14:42
+type=爽点兑现前 | 对齐=未命中 benchmark
+裴筠打算如何打破眼前的不合理局面？她会采取什么行动？</title><rect x='790.3' y='96.0' width='46.1' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect><text x='813.3' y='112.0' text-anchor='middle' fill='#13203f' font-size='11' font-weight='700'>P2</text></g><g><title>P3 | 额外输出 | 00:00-00:16
+type=信息悬念 | 对齐=未命中 benchmark
+这位打破规矩的新媳妇是谁？她打破规矩后引发了什么后果？</title><rect x='110.0' y='96.0' width='13.2' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P4 | 额外输出 | 12:29-13:16
+type=冲突悬念 | 对齐=未命中 benchmark
+爷爷所说的“沈家的规矩”具体有哪些要求？裴筠会怎么应对爷爷的下马威？</title><rect x='726.9' y='96.0' width='38.7' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P5 | 命中白色 | 09:55-10:20
+type=冲突悬念 | 对齐=case5-h2
+爷爷听到裴筠的质疑后会不会发作？第一次上门的饭局会不会闹僵？</title><rect x='600.0' y='96.0' width='20.6' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P6 | 额外输出 | 10:36-11:10
+type=关系悬念 | 对齐=未命中 benchmark
+裴筠要谈什么内容？她会不会因为沈家的规矩后悔和沈骁在一起？</title><rect x='633.8' y='96.0' width='28.0' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g></svg></div>
+        <div class="legend">
+          <span class='chip bench-good'>benchmark-绿</span>
+          <span class='chip bench-bad'>benchmark-红</span>
+          <span class='chip bench-yellow'>benchmark-黄</span>
+          <span class='chip bench-white'>benchmark-白</span>
+          <span class='chip pred-good'>输出命中绿</span>
+          <span class='chip pred-bad'>输出误命中红</span>
+          <span class='chip pred-extra'>输出额外命中外</span>
+        </div>
+        <div class="cols case-cols">
+          <div>
+            <h3>v1.4 输出列表</h3>
+            <table class="compact">
+              <thead><tr><th>序号</th><th>时间</th><th>类型</th><th>状态</th><th>对齐</th><th>IoU</th><th>open_question / 描述</th></tr></thead>
+              <tbody><tr><td class='num'>P1</td><td class='num'>14:40 - 16:34</td><td>冲突悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>爷爷会如何回应裴筠的反驳？这场关于沈家规矩的对峙最终会是什么结果？</td></tr><tr><td class='num'>P2</td><td class='num'>13:46 - 14:42</td><td>爽点兑现前</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>裴筠打算如何打破眼前的不合理局面？她会采取什么行动？</td></tr><tr><td class='num'>P3</td><td class='num'>00:00 - 00:16</td><td>信息悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>这位打破规矩的新媳妇是谁？她打破规矩后引发了什么后果？</td></tr><tr><td class='num'>P4</td><td class='num'>12:29 - 13:16</td><td>冲突悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>爷爷所说的“沈家的规矩”具体有哪些要求？裴筠会怎么应对爷爷的下马威？</td></tr><tr><td class='num'>P5</td><td class='num'>09:55 - 10:20</td><td>冲突悬念</td><td><span class='mini-pill pred-white'>命中白色</span></td><td>case5-h2</td><td>0.44</td><td>爷爷听到裴筠的质疑后会不会发作？第一次上门的饭局会不会闹僵？</td></tr><tr><td class='num'>P6</td><td class='num'>10:36 - 11:10</td><td>关系悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>裴筠要谈什么内容？她会不会因为沈家的规矩后悔和沈骁在一起？</td></tr></tbody>
+            </table>
+          </div>
+          <div>
+            <h3>benchmark 对照</h3>
+            <table class="compact">
+              <thead><tr><th>ID</th><th>颜色</th><th>时间</th><th>结果</th><th>命中输出</th><th>内容</th></tr></thead>
+              <tbody><tr><td>case5-h1</td><td><span class='mini-pill bench-bad'>红色</span></td><td class='num'>00:12 - 00:17</td><td>✓已规避</td><td>-</td><td>沈家七遍请饭规矩在新媳妇进门当天被打破，媳妇当场收爷爷碗</td></tr><tr><td>case5-h2</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>09:56 - 10:07</td><td>保留(中性)</td><td>P5</td><td>女主当众暗指等爷爷开饭把菜等凉，爷爷脸色骤沉放下筷子</td></tr><tr><td>case5-h3</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>11:01 - 11:13</td><td>删除(中性)</td><td>-</td><td>女主提起两人四年感情说吃饭规矩得谈谈，男主误以为她后悔</td></tr><tr><td>case5-h4</td><td><span class='mini-pill bench-bad'>红色</span></td><td class='num'>13:07 - 13:18</td><td>✓已规避</td><td>-</td><td>爷爷当众给新孙媳下马威，称进沈家门就要懂沈家规矩</td></tr><tr><td>case5-h5</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>14:30 - 14:42</td><td>删除(中性)</td><td>-</td><td>婆婆嗓子哑仍要请爷爷吃饭，女主突然放下水果刀走向阳台</td></tr><tr><td>case5-h6</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>14:40 - 14:54</td><td>删除(中性)</td><td>-</td><td>女主打破规矩只叫爷爷一遍吃饭，公公和爷爷当场愣住</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        
+      </div>
+    </details>
+    
+    <details class="case-detail" >
+      <summary>
+        <span class="case-title">case6 · 狐狸抬轿</span>
+        <span class="case-summary-chips"><span class='chip '>预测 6</span><span class='chip good'>绿 0/0</span><span class='chip bad'>红 0/2</span><span class='chip warn'>黄 1</span><span class='chip '>白 3</span></span>
+      </summary>
+      <div class="case-body">
+        <div class="timeline-note">上轨是 benchmark，下轨是 v1.4 实际输出。鼠标悬停可看每个块的具体内容。</div>
+        <div class="timeline-box"><svg class='timeline' viewBox='0 0 1000 176' preserveAspectRatio='none'><rect x='110' y='44' width='860' height='24' rx='8' fill='#121732' stroke='#2c3358'></rect><rect x='110' y='96' width='860' height='24' rx='8' fill='#121732' stroke='#2c3358'></rect><text x='18' y='60' fill='#9aa3c0' font-size='12'>benchmark</text><text x='18' y='112' fill='#9aa3c0' font-size='12'>v1.4 输出</text><line x1='110.0' y1='34' x2='110.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='110.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>00:00</text><line x1='325.0' y1='34' x2='325.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='325.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>02:41</text><line x1='540.0' y1='34' x2='540.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='540.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>05:23</text><line x1='755.0' y1='34' x2='755.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='755.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>08:04</text><line x1='970.0' y1='34' x2='970.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='970.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>10:45</text><g><title>case6-h1 | 红色 | 02:56-03:24
+王老爹发现抬轿两人走路不留脚印、又不肯透露求救者身份，疑心有鬼
+结果：✓已规避</title><rect x='344.5' y='44.0' width='37.3' height='24' rx='6' ry='6' fill='#ff5c7c' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case6-h2 | 白色 | 03:25-03:32
+雪豹带成群野兽拦路，王老爹吓得叫停，灰衣男子淡定说雪豹不敢伤人
+结果：删除(中性)</title><rect x='383.1' y='44.0' width='9.3' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case6-h3 | 黄色 | 03:46-04:13
+诡异巨树拦路王老爹要原路返回，白衣男子拦住称收了好处不能反悔
+结果：保留(可选)</title><rect x='411.1' y='44.0' width='36.0' height='24' rx='6' ry='6' fill='#ffb020' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case6-h4 | 白色 | 04:46-05:01
+白衣男子露白色利爪撕碎树根，王老爹震惊质问两人到底是什么东西
+结果：保留(中性)</title><rect x='491.1' y='44.0' width='20.0' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case6-h5 | 白色 | 05:35-05:45
+王老爹被带进山洞见满洞狐狸，前排狐狸站起周身冒白烟开始化形
+结果：保留(中性)</title><rect x='556.4' y='44.0' width='13.3' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case6-h6 | 白色 | 07:50-08:07
+黑狐刑官误以为王老爹要伤白狐老祖扑上去咬住其胳膊，王老爹忍痛劝说
+结果：保留(中性)</title><rect x='736.2' y='44.0' width='22.7' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case6-h7 | 红色 | 09:42-09:58
+狐族宝库大门打开满室奇珍任挑，王老爹却直言不要转身要走
+结果：✓已规避</title><rect x='885.5' y='44.0' width='21.3' height='24' rx='6' ry='6' fill='#ff5c7c' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case6-h8 | 白色 | 10:08-10:15
+白衣男子搬出成袋金元宝倒桌上，王老爹瞪大双眼惊得说不出话
+结果：删除(中性)</title><rect x='920.1' y='44.0' width='8.9' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P1 | 命中白色 | 04:38-05:00
+type=身份悬念 | 对齐=case6-h4
+这两个年轻人的真实身份是什么？山上的「老祖宗」又是什么存在？</title><rect x='480.4' y='96.0' width='29.3' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P2 | 命中白色 | 05:33-05:51
+type=身份悬念 | 对齐=case6-h5
+这些能化为人形的狐狸是什么来历？这位狼形老人是谁？他们说的「老祖宗」究竟是什么？</title><rect x='553.7' y='96.0' width='24.0' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P3 | 命中白色 | 07:49-08:08
+type=冲突悬念 | 对齐=case6-h6
+黑狐执刑官会不会松口让王老爹救治老祖？命悬一线的白狐老祖能不能撑到救治成功？</title><rect x='734.9' y='96.0' width='25.3' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P4 | 命中黄色 | 03:44-04:13
+type=冲突悬念 | 对齐=case6-h3
+王老爹会不会继续跟两人上山？那棵诡异的巨树到底是什么来历？</title><rect x='408.5' y='96.0' width='38.6' height='24' rx='6' ry='6' fill='#ffb020' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P5 | 额外输出 | 09:20-09:45
+type=利益期待 | 对齐=未命中 benchmark
+白狐老祖会给王老爹什么样的报酬？王老爹会不会接受这些宝物？</title><rect x='856.2' y='96.0' width='33.3' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P6 | 额外输出 | 00:09-00:51
+type=信息悬念 | 对齐=未命中 benchmark
+瘫痪在床两年、连水都喝不上的石墩，为什么能突然出声还感知到了屋外的金子？</title><rect x='122.0' y='96.0' width='56.0' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect><text x='150.0' y='112.0' text-anchor='middle' fill='#13203f' font-size='11' font-weight='700'>P6</text></g></svg></div>
+        <div class="legend">
+          <span class='chip bench-good'>benchmark-绿</span>
+          <span class='chip bench-bad'>benchmark-红</span>
+          <span class='chip bench-yellow'>benchmark-黄</span>
+          <span class='chip bench-white'>benchmark-白</span>
+          <span class='chip pred-good'>输出命中绿</span>
+          <span class='chip pred-bad'>输出误命中红</span>
+          <span class='chip pred-extra'>输出额外命中外</span>
+        </div>
+        <div class="cols case-cols">
+          <div>
+            <h3>v1.4 输出列表</h3>
+            <table class="compact">
+              <thead><tr><th>序号</th><th>时间</th><th>类型</th><th>状态</th><th>对齐</th><th>IoU</th><th>open_question / 描述</th></tr></thead>
+              <tbody><tr><td class='num'>P1</td><td class='num'>04:38 - 05:00</td><td>身份悬念</td><td><span class='mini-pill pred-white'>命中白色</span></td><td>case6-h4</td><td>0.609</td><td>这两个年轻人的真实身份是什么？山上的「老祖宗」又是什么存在？</td></tr><tr><td class='num'>P2</td><td class='num'>05:33 - 05:51</td><td>身份悬念</td><td><span class='mini-pill pred-white'>命中白色</span></td><td>case6-h5</td><td>0.556</td><td>这些能化为人形的狐狸是什么来历？这位狼形老人是谁？他们说的「老祖宗」究竟是什么？</td></tr><tr><td class='num'>P3</td><td class='num'>07:49 - 08:08</td><td>冲突悬念</td><td><span class='mini-pill pred-white'>命中白色</span></td><td>case6-h6</td><td>0.895</td><td>黑狐执刑官会不会松口让王老爹救治老祖？命悬一线的白狐老祖能不能撑到救治成功？</td></tr><tr><td class='num'>P4</td><td class='num'>03:44 - 04:13</td><td>冲突悬念</td><td><span class='mini-pill pred-yellow'>命中黄色</span></td><td>case6-h3</td><td>0.931</td><td>王老爹会不会继续跟两人上山？那棵诡异的巨树到底是什么来历？</td></tr><tr><td class='num'>P5</td><td class='num'>09:20 - 09:45</td><td>利益期待</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>白狐老祖会给王老爹什么样的报酬？王老爹会不会接受这些宝物？</td></tr><tr><td class='num'>P6</td><td class='num'>00:09 - 00:51</td><td>信息悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>瘫痪在床两年、连水都喝不上的石墩，为什么能突然出声还感知到了屋外的金子？</td></tr></tbody>
+            </table>
+          </div>
+          <div>
+            <h3>benchmark 对照</h3>
+            <table class="compact">
+              <thead><tr><th>ID</th><th>颜色</th><th>时间</th><th>结果</th><th>命中输出</th><th>内容</th></tr></thead>
+              <tbody><tr><td>case6-h1</td><td><span class='mini-pill bench-bad'>红色</span></td><td class='num'>02:56 - 03:24</td><td>✓已规避</td><td>-</td><td>王老爹发现抬轿两人走路不留脚印、又不肯透露求救者身份，疑心有鬼</td></tr><tr><td>case6-h2</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>03:25 - 03:32</td><td>删除(中性)</td><td>-</td><td>雪豹带成群野兽拦路，王老爹吓得叫停，灰衣男子淡定说雪豹不敢伤人</td></tr><tr><td>case6-h3</td><td><span class='mini-pill bench-yellow'>黄色</span></td><td class='num'>03:46 - 04:13</td><td>保留(可选)</td><td>P4</td><td>诡异巨树拦路王老爹要原路返回，白衣男子拦住称收了好处不能反悔</td></tr><tr><td>case6-h4</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>04:46 - 05:01</td><td>保留(中性)</td><td>P1</td><td>白衣男子露白色利爪撕碎树根，王老爹震惊质问两人到底是什么东西</td></tr><tr><td>case6-h5</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>05:35 - 05:45</td><td>保留(中性)</td><td>P2</td><td>王老爹被带进山洞见满洞狐狸，前排狐狸站起周身冒白烟开始化形</td></tr><tr><td>case6-h6</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>07:50 - 08:07</td><td>保留(中性)</td><td>P3</td><td>黑狐刑官误以为王老爹要伤白狐老祖扑上去咬住其胳膊，王老爹忍痛劝说</td></tr><tr><td>case6-h7</td><td><span class='mini-pill bench-bad'>红色</span></td><td class='num'>09:42 - 09:58</td><td>✓已规避</td><td>-</td><td>狐族宝库大门打开满室奇珍任挑，王老爹却直言不要转身要走</td></tr><tr><td>case6-h8</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>10:08 - 10:15</td><td>删除(中性)</td><td>-</td><td>白衣男子搬出成袋金元宝倒桌上，王老爹瞪大双眼惊得说不出话</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        
+      </div>
+    </details>
+    
+    <details class="case-detail" >
+      <summary>
+        <span class="case-title">case7 · 别怪我心狠，谁让你动我三十万鱼苗</span>
+        <span class="case-summary-chips"><span class='chip '>预测 3</span><span class='chip good'>绿 0/0</span><span class='chip bad'>红 0/1</span><span class='chip warn'>黄 0</span><span class='chip '>白 0</span></span>
+      </summary>
+      <div class="case-body">
+        <div class="timeline-note">上轨是 benchmark，下轨是 v1.4 实际输出。鼠标悬停可看每个块的具体内容。</div>
+        <div class="timeline-box"><svg class='timeline' viewBox='0 0 1000 176' preserveAspectRatio='none'><rect x='110' y='44' width='860' height='24' rx='8' fill='#121732' stroke='#2c3358'></rect><rect x='110' y='96' width='860' height='24' rx='8' fill='#121732' stroke='#2c3358'></rect><text x='18' y='60' fill='#9aa3c0' font-size='12'>benchmark</text><text x='18' y='112' fill='#9aa3c0' font-size='12'>v1.4 输出</text><line x1='110.0' y1='34' x2='110.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='110.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>00:00</text><line x1='325.0' y1='34' x2='325.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='325.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>02:15</text><line x1='540.0' y1='34' x2='540.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='540.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>04:30</text><line x1='755.0' y1='34' x2='755.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='755.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>06:46</text><line x1='970.0' y1='34' x2='970.0' y2='138' stroke='#2c3358' stroke-dasharray='4 4'></line><text x='970.0' y='160' fill='#9aa3c0' font-size='11' text-anchor='middle'>09:01</text><g><title>case7-h1 | 白色 | 04:50-05:06
+大妈拿剧毒除草剂要倒进鱼塘，放话让男主 30 万鱼全死光，同伙阻拦无用
+结果：删除(中性)</title><rect x='571.2' y='44.0' width='25.4' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case7-h2 | 白色 | 07:17-07:21
+警察查案大妈凑过来乱指点，警察一句话问得她瞬间慌乱
+结果：删除(中性)</title><rect x='805.0' y='44.0' width='8.0' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case7-h3 | 红色 | 00:47-00:54
+男子揭穿大妈偷捞两条锦鲤值五千属盗窃，大妈脸色大变
+结果：✓已规避</title><rect x='184.7' y='44.0' width='11.1' height='24' rx='6' ry='6' fill='#ff5c7c' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case7-h4 | 白色 | 08:23-08:35
+大妈嘴硬说监控伪造，警察拿出脚印工具断面全套证据反问她
+结果：删除(中性)</title><rect x='910.0' y='44.0' width='19.1' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case7-h5 | 白色 | 02:53-03:17
+大妈叫两同伙密谋蒙面偷光 30 万锦鲤，备好电鱼工具
+结果：删除(中性)</title><rect x='385.1' y='44.0' width='38.2' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case7-h6 | 白色 | 01:20-01:38
+大妈坐地撒泼诬陷男主欺负老小，男主掏手机录像称喊越大声证据越清楚
+结果：删除(中性)</title><rect x='237.2' y='44.0' width='28.6' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case7-h7 | 白色 | 01:42-02:00
+大妈偷鱼被抓掀桶碎鱼泄愤，男主放话不知好别怪自己心狠
+结果：删除(中性)</title><rect x='272.2' y='44.0' width='28.6' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>case7-h8 | 白色 | 05:33-05:54
+男主发现满塘死鱼报警，称完整监控拍到嫌疑人面部，天亮要看清真凶
+结果：删除(中性)</title><rect x='639.6' y='44.0' width='33.4' height='24' rx='6' ry='6' fill='#d7dcef' stroke='#0b0f1f' stroke-width='1.2'></rect></g><g><title>P1 | 额外输出 | 00:00-02:00
+type=爽点兑现前 | 对齐=未命中 benchmark
+林远会采取什么措施应对刘翠花的偷鱼行为？</title><rect x='110.0' y='96.0' width='191.6' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect><text x='205.8' y='112.0' text-anchor='middle' fill='#13203f' font-size='11' font-weight='700'>P1</text></g><g><title>P2 | 额外输出 | 02:01-03:22
+type=冲突悬念 | 对齐=未命中 benchmark
+林远会如何应对三名偷鱼者的闯入？</title><rect x='302.4' y='96.0' width='128.0' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect><text x='366.4' y='112.0' text-anchor='middle' fill='#13203f' font-size='11' font-weight='700'>P2</text></g><g><title>P3 | 额外输出 | 03:32-04:54
+type=信息悬念 | 对齐=未命中 benchmark
+刘翠花拿出的神秘瓶子里装的是什么？她偷鱼得手后不离开，拿出这个瓶子想做什么？</title><rect x='447.2' y='96.0' width='130.4' height='24' rx='6' ry='6' fill='#4d8dff' stroke='#0b0f1f' stroke-width='1.2'></rect><text x='512.4' y='112.0' text-anchor='middle' fill='#13203f' font-size='11' font-weight='700'>P3</text></g></svg></div>
+        <div class="legend">
+          <span class='chip bench-good'>benchmark-绿</span>
+          <span class='chip bench-bad'>benchmark-红</span>
+          <span class='chip bench-yellow'>benchmark-黄</span>
+          <span class='chip bench-white'>benchmark-白</span>
+          <span class='chip pred-good'>输出命中绿</span>
+          <span class='chip pred-bad'>输出误命中红</span>
+          <span class='chip pred-extra'>输出额外命中外</span>
+        </div>
+        <div class="cols case-cols">
+          <div>
+            <h3>v1.4 输出列表</h3>
+            <table class="compact">
+              <thead><tr><th>序号</th><th>时间</th><th>类型</th><th>状态</th><th>对齐</th><th>IoU</th><th>open_question / 描述</th></tr></thead>
+              <tbody><tr><td class='num'>P1</td><td class='num'>00:00 - 02:00</td><td>爽点兑现前</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>林远会采取什么措施应对刘翠花的偷鱼行为？</td></tr><tr><td class='num'>P2</td><td class='num'>02:01 - 03:22</td><td>冲突悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>林远会如何应对三名偷鱼者的闯入？</td></tr><tr><td class='num'>P3</td><td class='num'>03:32 - 04:54</td><td>信息悬念</td><td><span class='mini-pill pred-extra'>额外输出</span></td><td>-</td><td>-</td><td>刘翠花拿出的神秘瓶子里装的是什么？她偷鱼得手后不离开，拿出这个瓶子想做什么？</td></tr></tbody>
+            </table>
+          </div>
+          <div>
+            <h3>benchmark 对照</h3>
+            <table class="compact">
+              <thead><tr><th>ID</th><th>颜色</th><th>时间</th><th>结果</th><th>命中输出</th><th>内容</th></tr></thead>
+              <tbody><tr><td>case7-h1</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>04:50 - 05:06</td><td>删除(中性)</td><td>-</td><td>大妈拿剧毒除草剂要倒进鱼塘，放话让男主 30 万鱼全死光，同伙阻拦无用</td></tr><tr><td>case7-h2</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>07:17 - 07:21</td><td>删除(中性)</td><td>-</td><td>警察查案大妈凑过来乱指点，警察一句话问得她瞬间慌乱</td></tr><tr><td>case7-h3</td><td><span class='mini-pill bench-bad'>红色</span></td><td class='num'>00:47 - 00:54</td><td>✓已规避</td><td>-</td><td>男子揭穿大妈偷捞两条锦鲤值五千属盗窃，大妈脸色大变</td></tr><tr><td>case7-h4</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>08:23 - 08:35</td><td>删除(中性)</td><td>-</td><td>大妈嘴硬说监控伪造，警察拿出脚印工具断面全套证据反问她</td></tr><tr><td>case7-h5</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>02:53 - 03:17</td><td>删除(中性)</td><td>-</td><td>大妈叫两同伙密谋蒙面偷光 30 万锦鲤，备好电鱼工具</td></tr><tr><td>case7-h6</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>01:20 - 01:38</td><td>删除(中性)</td><td>-</td><td>大妈坐地撒泼诬陷男主欺负老小，男主掏手机录像称喊越大声证据越清楚</td></tr><tr><td>case7-h7</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>01:42 - 02:00</td><td>删除(中性)</td><td>-</td><td>大妈偷鱼被抓掀桶碎鱼泄愤，男主放话不知好别怪自己心狠</td></tr><tr><td>case7-h8</td><td><span class='mini-pill bench-white'>白色</span></td><td class='num'>05:33 - 05:54</td><td>删除(中性)</td><td>-</td><td>男主发现满塘死鱼报警，称完整监控拍到嫌疑人面部，天亮要看清真凶</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        
+      </div>
+    </details>
+    
+  </section>
+
+  <section>
+    <h2><span class="n">4</span>自动化迭代是怎么产出 v1.4 的</h2>
     <div class="flow">
       <span class="step">① Turbo + 当前 prompt 提取 hook</span><span class="arrow">→</span>
       <span class="step">② 与 benchmark 对比，挑出 badcase</span><span class="arrow">→</span>
@@ -141,7 +629,7 @@
       <span class="step">④ Seed 2.1 Pro 视频理解逐条诊断</span><span class="arrow">→</span>
       <span class="step">⑤ 反推排除/保护规则，写入新 prompt</span>
     </div>
-    <p class="lead" style="margin-top:14px">v1.3（55.0 分）的 7 个 badcase 片段送 Pro 逐一“亲眼看片判断”，Pro 判定与人工研判 <b>100% 一致</b>，提炼出以下规则（E5-E7 为本轮新增）：</p>
+    <p class="lead" style="margin-top:14px">v1.3（55.0 分）的 badcase 片段送 Pro 逐一看片判断，Pro 判定与人工研判 <b>100% 一致</b>，提炼出以下规则（E5-E7 为本轮新增）：</p>
     <table>
       <thead><tr><th>规则</th><th>来源</th><th>命中即删除 / 保留的情形</th></tr></thead>
       <tbody><tr><td class='tag'>E1</td><td class='muted'>v2 迭代</td><td>高潮后失利方发怒/部署求援的过渡节点（停在布置任务/拨电话/下指令）</td></tr><tr><td class='tag'>E2</td><td class='muted'>v2 迭代</td><td>“行动后等待结果”停在无征兆的空等初期（引鱼/下药/布陷阱…）</td></tr><tr><td class='tag'>E3</td><td class='muted'>v2→v1.3 强化</td><td>真相/爆料已说全 + 对方第一波即时反应已现，后续只剩补充语句/情绪宣泄</td></tr><tr><td class='tag'>E4</td><td class='muted'>v2 迭代</td><td>仅主角“察觉异常→戒备”的心理活动收尾，外部冲突尚未爆发</td></tr><tr><td class='tag'>E5</td><td class='muted'>v1.3 迭代</td><td>无实质内容的空洞宣告/铺垫台词（“进门要守规矩”“你给我等着”）</td></tr><tr><td class='tag'>E6</td><td class='muted'>v1.3 迭代</td><td>对已发生事件的评价/感慨类过渡对白；且严禁脑补片段外后续</td></tr><tr><td class='tag'>E7</td><td class='muted'>v1.3 迭代</td><td>指控/揭穿后仅呈现另一方“本能变脸情绪反应”，尚无具体反驳/反制/升级</td></tr><tr><td class='tag'>P1</td><td class='muted'>保护规则</td><td>主角锁定追责对象+情绪化放狠话+下令启动关键行动+真相未揭晓 → 保留</td></tr></tbody>
@@ -149,7 +637,7 @@
   </section>
 
   <section>
-    <h2><span class="n">4</span>提示词改动：v1 → v1.4</h2>
+    <h2><span class="n">5</span>提示词改动：v1 → v1.4</h2>
     <p class="lead">v1 是“松散召回 + 双输出 + 无验证/无排除”；v1.4 是“hook-only + 三力门槛 + 验证链 + E1-E7 排除 + P1 保护”。</p>
     <table>
       <thead><tr><th>维度</th><th>v1（原始）</th><th>v1.4（终版）</th></tr></thead>
@@ -169,7 +657,7 @@
   </section>
 
   <section>
-    <h2><span class="n">5</span>最终版提示词 v1.4（完整稿）</h2>
+    <h2><span class="n">6</span>最终版提示词 v1.4（完整稿）</h2>
     <p class="lead">以下为 <code>prompts/v1.4.txt</code> 全文，可直接作为 Seed 2.1 Turbo 的 system prompt 使用。</p>
     <pre># 漫剧/短剧 Hook 提取 Prompt v1.4（自动化迭代终版）
 #
