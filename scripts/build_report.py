@@ -1,32 +1,14 @@
 """生成《Seed 2.1 Turbo + 提示词 v1.4 测试报告》HTML。
-
-新增：
-1. 从 benchmark 与 v1.4 实测结果动态生成逐 case 可视化；
-2. 每个 case 展示 benchmark vs v1.4 的时间轴对照；
-3. 每个 case 展示预测输出列表、benchmark 命中状态、badcase 诊断摘要。
-"""
-from __future__ import annotations
-
+数据来自本仓库各 run 的 _eval.md（v1/v2/v1.3/v1.4）与片段分析报告；v1.4 提示词全文
+直接读取 prompts/v1.4.txt 以保证与实际使用完全一致。"""
 import html
 import json
-import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-REPORT_DIR = ROOT / "reports"
-V14_DIR = ROOT / "results" / "v1.4_seed-2-1-turbo"
-BENCHMARK_PATH = ROOT / "data" / "benchmark" / "benchmark.json"
-SEGMENT_ANALYSIS_PATH = V14_DIR / "_segment_analysis.json"
 V14_PROMPT = (ROOT / "prompts" / "v1.4.txt").read_text(encoding="utf-8")
-
-
-def load_json(path: Path):
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-BENCHMARK = load_json(BENCHMARK_PATH)
-SEGMENT_ANALYSIS = load_json(SEGMENT_ANALYSIS_PATH) if SEGMENT_ANALYSIS_PATH.exists() else []
-IOU_THRESHOLD = float(BENCHMARK["_meta"].get("iou_threshold", 0.3))
+V14_DIR = ROOT / "results" / "v1.4_seed-2-1-turbo"
+BENCH = json.loads((ROOT / "data" / "benchmark" / "benchmark.json").read_text(encoding="utf-8"))
 
 # ---- 各版本 benchmark 汇总（均为 7 case 全量实测；v1 为 benchmark 来源）----
 VERSIONS = [
@@ -35,6 +17,17 @@ VERSIONS = [
     ("v1.3（v1.2×v3 融合）", 55.0, 1, 2, 6, 15, "恢复双输出+8步流程+E1-E4；召回偏宽，红色仍漏 6"),
     ("v2（聚焦hook+badcase门槛）", 61.7, 1, 2, 4, 15, "hook-only + 三力 + E1-E4"),
     ("v1.4（自动迭代终版）", 71.7, 1, 2, 1, 15, "hook-only + 三力 + E1-E7 + P1；红色仅漏 1"),
+]
+
+# v1.4 逐 case（预测数 / 绿保留 / 红误命中 / 黄保留 / 白保留）
+V14_CASES = [
+    ("case1", "蒙眼望断江南雪", 8, "0/0", "0/1", 0, 1),
+    ("case2", "渔乡守真心", 6, "1/1", "1/4", 0, 0),
+    ("case3", "一次伸手，一生情", 8, "0/1", "0/3", 0, 2),
+    ("case4", "新娘当场换新郎", 5, "0/0", "0/2", 1, 1),
+    ("case5", "爷爷不请七遍不动筷", 6, "0/0", "0/2", 0, 1),
+    ("case6", "狐狸抬轿", 6, "0/0", "0/2", 1, 3),
+    ("case7", "别怪我心狠，谁让你动我三十万鱼苗", 3, "0/0", "0/1", 0, 0),
 ]
 
 # v1 → v1.4 提示词关键改动
@@ -62,364 +55,10 @@ RULES = [
     ("P1", "保护规则", "主角锁定追责对象+情绪化放狠话+下令启动关键行动+真相未揭晓 → 保留"),
 ]
 
-QUALITY_META = {
-    "good": {"label": "绿色", "short": "绿", "color": "#37d67a", "cls": "good"},
-    "bad": {"label": "红色", "short": "红", "color": "#ff5c7c", "cls": "bad"},
-    "borderline": {"label": "黄色", "short": "黄", "color": "#ffb020", "cls": "yellow"},
-    "acceptable": {"label": "白色", "short": "白", "color": "#d7dcef", "cls": "white"},
-}
 
-PRED_META = {
-    "good": {"label": "命中绿色", "color": "#37d67a", "cls": "pred-good"},
-    "bad": {"label": "误命中红色", "color": "#ff5c7c", "cls": "pred-bad"},
-    "borderline": {"label": "命中黄色", "color": "#ffb020", "cls": "pred-yellow"},
-    "acceptable": {"label": "命中白色", "color": "#d7dcef", "cls": "pred-white"},
-    "extra": {"label": "额外输出", "color": "#4d8dff", "cls": "pred-extra"},
-}
+def esc(s: str) -> str:
+    return html.escape(s)
 
-
-def esc(s) -> str:
-    return html.escape(str(s))
-
-
-def fmt_ms(ms: int | float | None) -> str:
-    if ms is None:
-        return "-"
-    total_seconds = max(0, int(round(float(ms) / 1000)))
-    hours, rem = divmod(total_seconds, 3600)
-    minutes, seconds = divmod(rem, 60)
-    if hours:
-        return f"{hours}:{minutes:02d}:{seconds:02d}"
-    return f"{minutes:02d}:{seconds:02d}"
-
-
-def shorten(text: str, limit: int = 48) -> str:
-    text = str(text).strip()
-    return text if len(text) <= limit else text[: limit - 1] + "…"
-
-
-def _iou(a: tuple[float, float], b: tuple[float, float]) -> float:
-    start = max(a[0], b[0])
-    end = min(a[1], b[1])
-    inter = max(0.0, end - start)
-    union = (a[1] - a[0]) + (b[1] - b[0]) - inter
-    return inter / union if union > 0 else 0.0
-
-
-def rel_to_report(path_like: str | Path) -> str:
-    path = Path(path_like)
-    abs_path = path if path.is_absolute() else (ROOT / path)
-    return Path(os.path.relpath(abs_path, REPORT_DIR)).as_posix()
-
-
-def build_case_data(case_id: str, case_bench: dict) -> dict:
-    result = load_json(V14_DIR / f"{case_id}.json")
-    pred_hooks = result.get("parsed", {}).get("hook", []) or []
-    bench_items = case_bench["items"]
-    analyses = [item for item in SEGMENT_ANALYSIS if item.get("case_id") == case_id]
-
-    pred_rows = []
-    for idx, pred in enumerate(pred_hooks, start=1):
-        pred_rows.append({
-            "idx": idx,
-            "start_time": int(pred["start_time"]),
-            "end_time": int(pred["end_time"]),
-            "hook_type": pred.get("hook_type", ""),
-            "open_question": pred.get("open_question", ""),
-            "description": pred.get("description", ""),
-            "status": "extra",
-            "matched_bench_id": None,
-            "match_quality": None,
-            "match_iou": None,
-            "status_label": PRED_META["extra"]["label"],
-            "cls": PRED_META["extra"]["cls"],
-        })
-
-    used: set[int] = set()
-    bench_rows = []
-    green_total = green_kept = 0
-    red_total = red_hit = 0
-    yellow_kept = white_kept = 0
-
-    for bench in bench_items:
-        bench_span = (float(bench["start_time"]), float(bench["end_time"]))
-        best_idx, best_iou = -1, 0.0
-        for pred_idx, pred in enumerate(pred_hooks):
-            if pred_idx in used:
-                continue
-            pred_span = (float(pred["start_time"]), float(pred["end_time"]))
-            iou = _iou(pred_span, bench_span)
-            if iou > best_iou:
-                best_iou, best_idx = iou, pred_idx
-
-        hit = best_idx >= 0 and best_iou >= IOU_THRESHOLD
-        if hit:
-            used.add(best_idx)
-            pred_rows[best_idx]["status"] = bench["quality"]
-            pred_rows[best_idx]["matched_bench_id"] = bench["id"]
-            pred_rows[best_idx]["match_quality"] = bench["quality"]
-            pred_rows[best_idx]["match_iou"] = round(best_iou, 3)
-            pred_rows[best_idx]["status_label"] = PRED_META[bench["quality"]]["label"]
-            pred_rows[best_idx]["cls"] = PRED_META[bench["quality"]]["cls"]
-
-        quality = bench["quality"]
-        if quality == "good":
-            green_total += 1
-            green_kept += int(hit)
-            verdict = "✓保留" if hit else "✗漏保留"
-        elif quality == "bad":
-            red_total += 1
-            red_hit += int(hit)
-            verdict = "✗误命中" if hit else "✓已规避"
-        elif quality == "borderline":
-            yellow_kept += int(hit)
-            verdict = "保留(可选)" if hit else "删除(可选)"
-        else:
-            white_kept += int(hit)
-            verdict = "保留(中性)" if hit else "删除(中性)"
-
-        bench_rows.append({
-            "id": bench["id"],
-            "start_time": int(bench["start_time"]),
-            "end_time": int(bench["end_time"]),
-            "hook_type": bench.get("hook_type", ""),
-            "quality": quality,
-            "quality_label": QUALITY_META[quality]["label"],
-            "quality_short": QUALITY_META[quality]["short"],
-            "quality_cls": QUALITY_META[quality]["cls"],
-            "color": QUALITY_META[quality]["color"],
-            "content": bench.get("content", ""),
-            "expected": bench.get("expected", ""),
-            "hit": hit,
-            "verdict": verdict,
-            "iou": round(best_iou, 3) if hit else None,
-            "matched_pred_idx": best_idx + 1 if hit else None,
-        })
-
-    max_end = max(
-        [item["end_time"] for item in bench_rows] + [item["end_time"] for item in pred_rows] + [1]
-    )
-    timeline_end = int(max_end * 1.05)
-
-    return {
-        "case_id": case_id,
-        "name": case_bench["name"],
-        "pred_rows": pred_rows,
-        "bench_rows": bench_rows,
-        "analyses": analyses,
-        "n_pred": len(pred_rows),
-        "green_total": green_total,
-        "green_kept": green_kept,
-        "red_total": red_total,
-        "red_hit": red_hit,
-        "yellow_kept": yellow_kept,
-        "white_kept": white_kept,
-        "timeline_end": timeline_end,
-    }
-
-
-def chip(label: str, cls: str = "") -> str:
-    return f"<span class='chip {cls}'>{esc(label)}</span>"
-
-
-def bar_svg(x: float, y: float, width: float, height: float, fill: str, stroke: str, label: str, title: str, text_fill: str = "#0b0f1f") -> str:
-    text = ""
-    if width >= 42:
-        text = (
-            f"<text x='{x + width / 2:.1f}' y='{y + height / 2 + 4:.1f}' text-anchor='middle' "
-            f"fill='{text_fill}' font-size='11' font-weight='700'>{esc(label)}</text>"
-        )
-    return (
-        f"<g><title>{esc(title)}</title>"
-        f"<rect x='{x:.1f}' y='{y:.1f}' width='{width:.1f}' height='{height}' rx='6' ry='6' "
-        f"fill='{fill}' stroke='{stroke}' stroke-width='1.2'></rect>{text}</g>"
-    )
-
-
-def build_case_timeline(case: dict) -> str:
-    view_w = 1000
-    left = 110
-    top = 16
-    track_w = 860
-    row_h = 24
-    row_gap = 28
-    bench_y = top + 28
-    pred_y = bench_y + row_h + row_gap
-    axis_y = pred_y + row_h + 26
-    total_h = axis_y + 30
-    max_ms = max(case["timeline_end"], 1)
-
-    parts = [
-        f"<svg class='timeline' viewBox='0 0 {view_w} {total_h}' preserveAspectRatio='none'>",
-        f"<rect x='{left}' y='{bench_y}' width='{track_w}' height='{row_h}' rx='8' fill='#121732' stroke='#2c3358'></rect>",
-        f"<rect x='{left}' y='{pred_y}' width='{track_w}' height='{row_h}' rx='8' fill='#121732' stroke='#2c3358'></rect>",
-        f"<text x='18' y='{bench_y + 16}' fill='#9aa3c0' font-size='12'>benchmark</text>",
-        f"<text x='18' y='{pred_y + 16}' fill='#9aa3c0' font-size='12'>v1.4 输出</text>",
-    ]
-
-    for ratio in (0.0, 0.25, 0.5, 0.75, 1.0):
-        x = left + track_w * ratio
-        parts.append(f"<line x1='{x:.1f}' y1='{bench_y - 10}' x2='{x:.1f}' y2='{axis_y - 8}' stroke='#2c3358' stroke-dasharray='4 4'></line>")
-        parts.append(f"<text x='{x:.1f}' y='{axis_y + 14}' fill='#9aa3c0' font-size='11' text-anchor='middle'>{esc(fmt_ms(max_ms * ratio))}</text>")
-
-    for idx, bench in enumerate(case["bench_rows"], start=1):
-        x = left + track_w * (bench["start_time"] / max_ms)
-        width = max(8, track_w * ((bench["end_time"] - bench["start_time"]) / max_ms))
-        title = (
-            f"{bench['id']} | {bench['quality_label']} | {fmt_ms(bench['start_time'])}-{fmt_ms(bench['end_time'])}\n"
-            f"{bench['content']}\n结果：{bench['verdict']}"
-        )
-        parts.append(bar_svg(x, bench_y, width, row_h, bench["color"], "#0b0f1f", f"h{idx}", title))
-
-    for pred in case["pred_rows"]:
-        meta = PRED_META[pred["status"]]
-        x = left + track_w * (pred["start_time"] / max_ms)
-        width = max(8, track_w * ((pred["end_time"] - pred["start_time"]) / max_ms))
-        match_note = pred["matched_bench_id"] or "未命中 benchmark"
-        title = (
-            f"P{pred['idx']} | {meta['label']} | {fmt_ms(pred['start_time'])}-{fmt_ms(pred['end_time'])}\n"
-            f"type={pred['hook_type']} | 对齐={match_note}\n{pred['open_question'] or pred['description']}"
-        )
-        text_fill = "#0b0f1f" if pred["status"] in {"good", "bad", "borderline"} else "#13203f"
-        parts.append(bar_svg(x, pred_y, width, row_h, meta["color"], "#0b0f1f", f"P{pred['idx']}", title, text_fill))
-
-    parts.append("</svg>")
-    return "".join(parts)
-
-
-def build_prediction_rows(case: dict) -> str:
-    rows = []
-    for pred in case["pred_rows"]:
-        rows.append(
-            "<tr>"
-            f"<td class='num'>P{pred['idx']}</td>"
-            f"<td class='num'>{esc(fmt_ms(pred['start_time']))} - {esc(fmt_ms(pred['end_time']))}</td>"
-            f"<td>{esc(pred['hook_type'])}</td>"
-            f"<td><span class='mini-pill {esc(pred['cls'])}'>{esc(pred['status_label'])}</span></td>"
-            f"<td>{esc(pred['matched_bench_id'] or '-')}</td>"
-            f"<td>{esc(pred['match_iou'] if pred['match_iou'] is not None else '-')}</td>"
-            f"<td>{esc(shorten(pred['open_question'] or pred['description'], 58))}</td>"
-            "</tr>"
-        )
-    return "".join(rows) or "<tr><td colspan='7' class='muted'>无输出</td></tr>"
-
-
-def build_benchmark_rows(case: dict) -> str:
-    rows = []
-    for bench in case["bench_rows"]:
-        rows.append(
-            "<tr>"
-            f"<td>{esc(bench['id'])}</td>"
-            f"<td><span class='mini-pill bench-{esc(bench['quality_cls'])}'>{esc(bench['quality_label'])}</span></td>"
-            f"<td class='num'>{esc(fmt_ms(bench['start_time']))} - {esc(fmt_ms(bench['end_time']))}</td>"
-            f"<td>{esc(bench['verdict'])}</td>"
-            f"<td>{esc(bench['matched_pred_idx'] and ('P' + str(bench['matched_pred_idx'])) or '-')}</td>"
-            f"<td>{esc(shorten(bench['content'], 58))}</td>"
-            "</tr>"
-        )
-    return "".join(rows)
-
-
-def build_analysis_cards(case: dict) -> str:
-    if not case["analyses"]:
-        return ""
-    cards = []
-    for item in case["analyses"]:
-        analysis = item.get("analysis", {}) or {}
-        clip_rel = rel_to_report(item["clip"]) if item.get("clip") else None
-        kind_label = "绿色漏保留" if item.get("kind") == "green_missed" else "红色误命中"
-        verdict = analysis.get("verdict", "-")
-        agree = "一致" if analysis.get("agree_with_human") else "不一致"
-        link_html = f"<a href='{esc(clip_rel)}' target='_blank'>badcase 片段</a>" if clip_rel else ""
-        clip_html = f"<p class='muted'>{link_html}</p>" if link_html else ""
-        cards.append(
-            "<div class='analysis-card'>"
-            f"<div class='analysis-head'>{chip(kind_label, 'warn')} {chip(item.get('bench_id', '-'))} {chip('Pro判定: ' + verdict)} {chip('与人工: ' + agree)}</div>"
-            f"<div class='analysis-body'><p><b>人工内容：</b>{esc(item.get('human_content', ''))}</p>"
-            f"<p><b>证据：</b>{esc(analysis.get('evidence', '-'))}</p>"
-            f"<p><b>提示词改进：</b>{esc(analysis.get('prompt_improvement', '-'))}</p>"
-            f"{clip_html}</div>"
-            "</div>"
-        )
-    return (
-        "<div class='analysis-wrap'>"
-        "<h3>该 case 的 badcase 诊断</h3>"
-        + "".join(cards)
-        + "</div>"
-    )
-
-
-def build_case_detail(case: dict, open_by_default: bool = False) -> str:
-    summary = (
-        chip(f"预测 {case['n_pred']}") +
-        chip(f"绿 {case['green_kept']}/{case['green_total']}", "good") +
-        chip(f"红 {case['red_hit']}/{case['red_total']}", "bad") +
-        chip(f"黄 {case['yellow_kept']}", "warn") +
-        chip(f"白 {case['white_kept']}")
-    )
-    return f"""
-    <details class="case-detail" {'open' if open_by_default else ''}>
-      <summary>
-        <span class="case-title">{esc(case['case_id'])} · {esc(case['name'])}</span>
-        <span class="case-summary-chips">{summary}</span>
-      </summary>
-      <div class="case-body">
-        <div class="timeline-note">上轨是 benchmark，下轨是 v1.4 实际输出。鼠标悬停可看每个块的具体内容。</div>
-        <div class="timeline-box">{build_case_timeline(case)}</div>
-        <div class="legend">
-          {chip('benchmark-绿', 'bench-good')}
-          {chip('benchmark-红', 'bench-bad')}
-          {chip('benchmark-黄', 'bench-yellow')}
-          {chip('benchmark-白', 'bench-white')}
-          {chip('输出命中绿', 'pred-good')}
-          {chip('输出误命中红', 'pred-bad')}
-          {chip('输出额外命中外', 'pred-extra')}
-        </div>
-        <div class="cols case-cols">
-          <div>
-            <h3>v1.4 输出列表</h3>
-            <table class="compact">
-              <thead><tr><th>序号</th><th>时间</th><th>类型</th><th>状态</th><th>对齐</th><th>IoU</th><th>open_question / 描述</th></tr></thead>
-              <tbody>{build_prediction_rows(case)}</tbody>
-            </table>
-          </div>
-          <div>
-            <h3>benchmark 对照</h3>
-            <table class="compact">
-              <thead><tr><th>ID</th><th>颜色</th><th>时间</th><th>结果</th><th>命中输出</th><th>内容</th></tr></thead>
-              <tbody>{build_benchmark_rows(case)}</tbody>
-            </table>
-          </div>
-        </div>
-        {build_analysis_cards(case)}
-      </div>
-    </details>
-    """
-
-
-def benchmark_score(green_total: int, green_kept: int, red_total: int, red_hit: int) -> dict:
-    green_rate = green_kept / green_total if green_total else 1.0
-    red_avoid = (red_total - red_hit) / red_total if red_total else 1.0
-    score = 100 * (0.5 * green_rate + 0.5 * red_avoid)
-    return {
-        "green_rate": round(green_rate, 4),
-        "red_avoid_rate": round(red_avoid, 4),
-        "score": round(score, 1),
-    }
-
-
-CASE_DATA = [
-    build_case_data(case_id, case_bench)
-    for case_id, case_bench in BENCHMARK["cases"].items()
-]
-
-TOTAL_GREEN = sum(case["green_total"] for case in CASE_DATA)
-TOTAL_GREEN_KEPT = sum(case["green_kept"] for case in CASE_DATA)
-TOTAL_RED = sum(case["red_total"] for case in CASE_DATA)
-TOTAL_RED_HIT = sum(case["red_hit"] for case in CASE_DATA)
-TOTAL_PRED = sum(case["n_pred"] for case in CASE_DATA)
-TOTAL_BENCH_ITEMS = sum(len(case["bench_rows"]) for case in CASE_DATA)
-SUMMARY = benchmark_score(TOTAL_GREEN, TOTAL_GREEN_KEPT, TOTAL_RED, TOTAL_RED_HIT)
 
 bars = ""
 for name, score, gk, gt, rh, rt, note in VERSIONS:
@@ -441,11 +80,9 @@ ver_rows = "".join(
 )
 
 case_rows = "".join(
-    f"<tr><td>{esc(case['case_id'])}</td><td>{esc(case['name'])}</td><td class='num'>{case['n_pred']}</td>"
-    f"<td class='num'>{case['green_kept']}/{case['green_total']}</td>"
-    f"<td class='num red'>{case['red_hit']}/{case['red_total']}</td>"
-    f"<td class='num'>{case['yellow_kept']}</td><td class='num'>{case['white_kept']}</td></tr>"
-    for case in CASE_DATA
+    f"<tr><td>{esc(cid)}</td><td>{esc(nm)}</td><td class='num'>{npred}</td>"
+    f"<td class='num'>{g}</td><td class='num red'>{r}</td><td class='num'>{y}</td><td class='num'>{w}</td></tr>"
+    for cid, nm, npred, g, r, y, w in V14_CASES
 )
 
 diff_rows = "".join(
@@ -458,10 +95,144 @@ rule_rows = "".join(
     for code, src, desc in RULES
 )
 
-case_visuals = "".join(
-    build_case_detail(case, open_by_default=index < 2)
-    for index, case in enumerate(CASE_DATA)
-)
+
+# ---- 逐 case 可视化：模型 v1.4 实际输出 vs benchmark 参考（时间轴 + 详情卡）----
+def _iou(a, b):
+    s = max(a[0], b[0]); e = min(a[1], b[1]); inter = max(0.0, e - s)
+    union = (a[1] - a[0]) + (b[1] - b[0]) - inter
+    return inter / union if union > 0 else 0.0
+
+
+def fmt_ms(ms):
+    s = int(round(ms / 1000))
+    return f"{s // 60:02d}:{s % 60:02d}"
+
+
+# quality -> (css类, emoji, 判定文案)
+QMAP = {
+    "good": ("q-green", "🟢", "命中优质 hook · 应保留（成功）"),
+    "bad": ("q-red", "🔴", "命中 badcase · 应删除（误命中）"),
+    "borderline": ("q-yellow", "🟡", "命中黄色 · 可选保留"),
+    "acceptable": ("q-white", "⬜", "命中白色 · 中性"),
+    "extra": ("q-extra", "➕", "benchmark 未覆盖 · 模型自主新增"),
+}
+QLABEL = {  # benchmark 参考轨的图例
+    "good": ("q-green", "🟢 应保留"),
+    "bad": ("q-red", "🔴 应删除"),
+    "borderline": ("q-yellow", "🟡 可选"),
+    "acceptable": ("q-white", "⬜ 中性"),
+}
+
+
+def build_case_block(cid, nm, npred, g_str, r_str, y, w):
+    data = json.loads((V14_DIR / f"{cid}.json").read_text(encoding="utf-8"))
+    preds = data["parsed"].get("hook", [])
+    bench_items = [dict(x) for x in BENCH["cases"][cid]["items"]]
+
+    # 复刻 evaluator：遍历 benchmark 条目找最佳未占用预测，保证与 _eval.md 数字一致
+    used = {}
+    pred_verdict = {}  # pred_idx -> (quality, iou, bench_id)
+    for g in bench_items:
+        gs = (float(g["start_time"]), float(g["end_time"]))
+        best_j, best_iou = -1, 0.0
+        for j, p in enumerate(preds):
+            if j in used:
+                continue
+            iou = _iou((float(p["start_time"]), float(p["end_time"])), gs)
+            if iou > best_iou:
+                best_iou, best_j = iou, j
+        hit = best_j >= 0 and best_iou >= 0.3
+        g["_hit"] = hit
+        g["_iou"] = round(best_iou, 3) if hit else 0.0
+        if hit:
+            used[best_j] = g["id"]
+            pred_verdict[best_j] = (g["quality"], round(best_iou, 3), g["id"])
+
+    total = max([float(p["end_time"]) for p in preds]
+                + [float(g["end_time"]) for g in bench_items] + [1.0])
+
+    # 时间轴 A：模型输出
+    segs_a = ""
+    for j, p in enumerate(preds):
+        st, en = float(p["start_time"]), float(p["end_time"])
+        q = pred_verdict.get(j, ("extra", 0.0, None))[0]
+        cls = QMAP[q][0]
+        left = st / total * 100
+        wd = max((en - st) / total * 100, 0.8)
+        segs_a += (f"<div class='tl-seg {cls}' style='left:{left:.2f}%;width:{wd:.2f}%' "
+                   f"title='#{j+1} {fmt_ms(st)}-{fmt_ms(en)} · {esc(p.get('hook_type',''))}'>"
+                   f"{j+1}</div>")
+
+    # 时间轴 B：benchmark 参考（只画 good/bad 为主，黄白淡显）
+    segs_b = ""
+    for g in bench_items:
+        st, en = float(g["start_time"]), float(g["end_time"])
+        cls = QMAP[g["quality"]][0]
+        left = st / total * 100
+        wd = max((en - st) / total * 100, 0.8)
+        miss = "" if g["_hit"] else " miss"
+        segs_b += (f"<div class='tl-seg {cls}{miss}' style='left:{left:.2f}%;width:{wd:.2f}%' "
+                   f"title='{esc(g['id'])} {QMAP[g['quality']][2]} · {fmt_ms(st)}-{fmt_ms(en)} "
+                   f"· {'命中' if g['_hit'] else '未命中'}'></div>")
+
+    # 详情卡：每条模型输出 hook
+    cards = ""
+    for j, p in enumerate(preds):
+        q, iou_v, bid = pred_verdict.get(j, ("extra", 0.0, None))
+        cls, emoji, vtext = QMAP[q]
+        extra_meta = (f"<span class='chip'>IoU {iou_v}</span><span class='chip'>↔ {esc(bid)}</span>"
+                      if bid else "<span class='chip muted'>无 benchmark 对应</span>")
+        cards += f"""
+      <div class="hook-card {cls}">
+        <div class="hc-head">
+          <span class="hc-idx">#{j+1}</span>
+          <span class="hc-time">{fmt_ms(float(p['start_time']))} → {fmt_ms(float(p['end_time']))}</span>
+          <span class="chip type">{esc(p.get('hook_type',''))}</span>
+          <span class="hc-verdict">{emoji} {esc(vtext)}</span>
+          {extra_meta}
+        </div>
+        <div class="hc-q"><b>未解问题：</b>{esc(p.get('open_question',''))}</div>
+        <div class="hc-desc">{esc(p.get('description',''))}</div>
+        <div class="hc-reason"><b>截点理由：</b>{esc(p.get('end_point_reason',''))}</div>
+      </div>"""
+
+    # 漏保留的绿色（good 未命中）提示
+    missed_green = [g for g in bench_items if g["quality"] == "good" and not g["_hit"]]
+    miss_note = ""
+    if missed_green:
+        items = "；".join(f"{esc(g['id'])}「{esc(g.get('content','')[:24])}」" for g in missed_green)
+        miss_note = f"<div class='miss-note'>⚠ 漏保留绿色 {len(missed_green)} 条：{items}</div>"
+
+    legend = "".join(
+        f"<span class='lg'><i class='dot {c}'></i>{t}</span>"
+        for c, t in [QLABEL['good'], QLABEL['bad'], QLABEL['borderline'],
+                     QLABEL['acceptable'], (QMAP['extra'][0], "➕ 模型新增")]
+    )
+
+    return f"""
+    <details class="case-block" {'open' if cid in ('case2', 'case6') else ''}>
+      <summary>
+        <span class="cb-id">{esc(cid)}</span>
+        <span class="cb-name">{esc(nm)}</span>
+        <span class="cb-stat">输出 {npred} · 🟢{g_str} · 🔴{r_str} · 🟡{y} · ⬜{w}</span>
+      </summary>
+      <div class="cb-body">
+        {miss_note}
+        <div class="tl-wrap">
+          <div class="tl-row"><span class="tl-tag">模型 v1.4</span>
+            <div class="tl-track">{segs_a}</div></div>
+          <div class="tl-row"><span class="tl-tag">benchmark</span>
+            <div class="tl-track">{segs_b}</div></div>
+          <div class="tl-axis"><span>00:00</span><span>{fmt_ms(total)}</span></div>
+          <div class="legend">{legend}<span class="muted">（斜纹=benchmark 里未被命中；hover 看详情）</span></div>
+        </div>
+        <div class="cards">{cards}</div>
+      </div>
+    </details>"""
+
+
+cases_viz = "".join(build_case_block(*c) for c in V14_CASES)
+
 
 HTML = f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -473,23 +244,18 @@ HTML = f"""<!DOCTYPE html>
   :root {{
     --bg:#0f1220; --card:#1a1f35; --card2:#222844; --ink:#e8ebf5; --muted:#9aa3c0;
     --line:#2c3358; --green:#37d67a; --red:#ff5c7c; --blue:#4d8dff; --gold:#ffb020;
-    --white:#d7dcef; --v14:#37d67a;
+    --v14:#37d67a;
   }}
   * {{ box-sizing:border-box; }}
   body {{ margin:0; background:linear-gradient(160deg,#0d1020,#141833 60%,#0f1328);
     color:var(--ink); font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;
     line-height:1.65; }}
-  .wrap {{ max-width:1180px; margin:0 auto; padding:48px 24px 80px; }}
+  .wrap {{ max-width:1080px; margin:0 auto; padding:48px 24px 80px; }}
   header.hero {{ text-align:center; padding:40px 20px 28px; }}
   .hero h1 {{ font-size:30px; margin:0 0 10px; letter-spacing:.5px; }}
   .hero .sub {{ color:var(--muted); font-size:15px; }}
-  .pill, .chip {{ display:inline-block; padding:4px 12px; border-radius:999px; font-size:12px;
+  .pill {{ display:inline-block; padding:4px 12px; border-radius:999px; font-size:12px;
     background:#20264a; color:var(--muted); margin:2px 4px; border:1px solid var(--line); }}
-  .chip.good, .mini-pill.pred-good, .mini-pill.bench-good, .chip.bench-good {{ color:#0f1a12; background:var(--green); border-color:transparent; }}
-  .chip.bad, .mini-pill.pred-bad, .mini-pill.bench-bad, .chip.bench-bad {{ color:#240814; background:var(--red); border-color:transparent; }}
-  .chip.warn, .mini-pill.pred-yellow, .mini-pill.bench-yellow, .chip.bench-yellow {{ color:#241702; background:var(--gold); border-color:transparent; }}
-  .mini-pill.pred-white, .mini-pill.bench-white, .chip.bench-white {{ color:#1a223e; background:var(--white); border-color:transparent; }}
-  .mini-pill.pred-extra, .chip.pred-extra {{ color:#0d1733; background:var(--blue); border-color:transparent; }}
   .kpis {{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin:28px 0 8px; }}
   .kpi {{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px 18px; text-align:center; }}
   .kpi .big {{ font-size:34px; font-weight:800; }}
@@ -502,7 +268,6 @@ HTML = f"""<!DOCTYPE html>
   section h2 {{ font-size:20px; margin:0 0 16px; display:flex; align-items:center; gap:10px; }}
   section h2 .n {{ background:var(--blue); color:#fff; width:26px; height:26px; border-radius:8px;
     display:inline-flex; align-items:center; justify-content:center; font-size:14px; }}
-  section h3 {{ font-size:15px; margin:0 0 10px; }}
   p.lead {{ color:var(--muted); margin-top:-4px; }}
   .bar-row {{ margin:14px 0; }}
   .bar-label {{ font-size:14px; margin-bottom:6px; }}
@@ -534,33 +299,56 @@ HTML = f"""<!DOCTYPE html>
   .arrow {{ color:var(--muted); }}
   .cols {{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }}
   .note {{ background:#171b38; border-left:3px solid var(--gold); padding:12px 16px; border-radius:8px; font-size:13.5px; color:var(--muted); }}
-  .legend {{ margin-top:10px; }}
-  .timeline-note {{ color:var(--muted); font-size:13px; margin-bottom:10px; }}
-  .timeline-box {{ background:#11152a; border:1px solid var(--line); border-radius:14px; padding:14px; overflow:hidden; }}
-  .timeline {{ width:100%; height:188px; display:block; }}
-  .case-detail {{ border:1px solid var(--line); background:#161b31; border-radius:16px; margin:16px 0; overflow:hidden; }}
-  .case-detail summary {{ list-style:none; cursor:pointer; padding:18px 20px; display:flex; gap:12px; align-items:flex-start; justify-content:space-between; }}
-  .case-detail summary::-webkit-details-marker {{ display:none; }}
-  .case-detail[open] summary {{ border-bottom:1px solid var(--line); background:#1b213d; }}
-  .case-title {{ font-size:16px; font-weight:700; }}
-  .case-summary-chips {{ text-align:right; }}
-  .case-body {{ padding:18px 20px 22px; }}
-  .case-cols {{ margin-top:14px; }}
-  .compact th, .compact td {{ padding:8px 10px; font-size:12.5px; }}
-  .mini-pill {{ display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--line); }}
-  .analysis-wrap {{ margin-top:16px; }}
-  .analysis-card {{ background:#121732; border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-top:10px; }}
-  .analysis-head {{ margin-bottom:8px; }}
-  .analysis-body p {{ margin:8px 0; font-size:13px; }}
-  a {{ color:#7db0ff; text-decoration:none; }}
-  a:hover {{ text-decoration:underline; }}
+  /* ---- 逐 case 可视化 ---- */
+  .case-block {{ background:var(--card2); border:1px solid var(--line); border-radius:12px; margin:12px 0; overflow:hidden; }}
+  .case-block > summary {{ cursor:pointer; list-style:none; padding:14px 18px; display:flex; flex-wrap:wrap;
+    align-items:center; gap:10px; user-select:none; }}
+  .case-block > summary::-webkit-details-marker {{ display:none; }}
+  .case-block > summary::before {{ content:"▸"; color:var(--muted); transition:transform .2s; }}
+  .case-block[open] > summary::before {{ transform:rotate(90deg); }}
+  .cb-id {{ font-weight:800; color:var(--blue); font-size:13px; }}
+  .cb-name {{ font-weight:700; }}
+  .cb-stat {{ margin-left:auto; font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }}
+  .cb-body {{ padding:4px 18px 18px; border-top:1px solid var(--line); }}
+  .miss-note {{ background:rgba(255,92,124,.12); border:1px solid rgba(255,92,124,.4); color:#ffb9c8;
+    border-radius:8px; padding:8px 12px; font-size:13px; margin:12px 0; }}
+  .tl-wrap {{ margin:12px 0 6px; }}
+  .tl-row {{ display:flex; align-items:center; gap:10px; margin:6px 0; }}
+  .tl-tag {{ width:80px; flex:0 0 80px; font-size:12px; color:var(--muted); text-align:right; }}
+  .tl-track {{ position:relative; flex:1; height:26px; background:#0c0f22; border:1px solid var(--line);
+    border-radius:6px; }}
+  .tl-seg {{ position:absolute; top:2px; height:20px; border-radius:4px; font-size:10px; color:#06121f;
+    display:flex; align-items:center; justify-content:center; font-weight:800; overflow:hidden; }}
+  .tl-seg.miss {{ background-image:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(0,0,0,.35) 3px,rgba(0,0,0,.35) 6px); }}
+  .tl-axis {{ display:flex; justify-content:space-between; font-size:11px; color:var(--muted);
+    padding-left:90px; margin-top:2px; }}
+  .q-green {{ background:var(--green); }}
+  .q-red {{ background:var(--red); }}
+  .q-yellow {{ background:var(--gold); }}
+  .q-white {{ background:#c9d2ea; }}
+  .q-extra {{ background:var(--blue); }}
+  .legend {{ display:flex; flex-wrap:wrap; gap:14px; padding-left:90px; margin-top:8px; font-size:12px; color:var(--ink); }}
+  .lg {{ display:inline-flex; align-items:center; gap:5px; }}
+  .dot {{ width:11px; height:11px; border-radius:3px; display:inline-block; }}
+  .cards {{ display:grid; gap:10px; margin-top:14px; }}
+  .hook-card {{ background:#12162e; border:1px solid var(--line); border-left-width:4px; border-radius:10px; padding:12px 14px; }}
+  .hook-card.q-green {{ border-left-color:var(--green); }}
+  .hook-card.q-red {{ border-left-color:var(--red); background:rgba(255,92,124,.06); }}
+  .hook-card.q-yellow {{ border-left-color:var(--gold); }}
+  .hook-card.q-white {{ border-left-color:#c9d2ea; }}
+  .hook-card.q-extra {{ border-left-color:var(--blue); }}
+  .hc-head {{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:8px; }}
+  .hc-idx {{ font-weight:800; color:var(--muted); }}
+  .hc-time {{ font-variant-numeric:tabular-nums; font-weight:700; font-size:13px; }}
+  .hc-verdict {{ font-size:12.5px; }}
+  .chip {{ background:#232a4c; border:1px solid var(--line); border-radius:999px; padding:2px 9px; font-size:11.5px; color:var(--ink); }}
+  .chip.type {{ background:#1d2b46; color:#8fc0ff; }}
+  .chip.muted {{ color:var(--muted); }}
+  .hc-q {{ font-size:13.5px; color:#ffd9a0; margin:2px 0; }}
+  .hc-desc {{ font-size:13px; color:var(--ink); margin:4px 0; }}
+  .hc-reason {{ font-size:12.5px; color:var(--muted); }}
   footer {{ text-align:center; color:var(--muted); font-size:12px; margin-top:34px; }}
-  @media (max-width:900px) {{
-    .kpis{{grid-template-columns:repeat(2,1fr);}}
-    .cols{{grid-template-columns:1fr;}}
-    .case-detail summary{{flex-direction:column;}}
-    .case-summary-chips{{text-align:left;}}
-  }}
+  @media (max-width:720px) {{ .kpis{{grid-template-columns:repeat(2,1fr);}} .cols{{grid-template-columns:1fr;}} }}
 </style>
 </head>
 <body>
@@ -571,16 +359,16 @@ HTML = f"""<!DOCTYPE html>
     <div style="margin-top:12px">
       <span class="pill">主模型 Seed 2.1 Turbo（提取）</span>
       <span class="pill">Seed 2.1 Pro（片段视频理解·诊断）</span>
-      <span class="pill">7 个短剧 · benchmark {TOTAL_BENCH_ITEMS} 条 hook</span>
+      <span class="pill">7 个短剧 · benchmark 54 条 hook</span>
       <span class="pill">评测口径：绿色保留率 + 红色规避率</span>
     </div>
   </header>
 
   <div class="kpis">
-    <div class="kpi win"><div class="big">{SUMMARY['score']}</div><div class="lab">v1.4 综合分 / 100</div><div class="delta up">▲ 相比 v1 +{round(SUMMARY['score'] - 50.0, 1)}</div></div>
-    <div class="kpi win"><div class="big">{round(SUMMARY['red_avoid_rate'] * 100)}%</div><div class="lab">红色 badcase 规避率</div><div class="delta up">▲ v1 为 0%</div></div>
-    <div class="kpi"><div class="big">{TOTAL_RED_HIT}<span class="muted" style="font-size:18px">/{TOTAL_RED}</span></div><div class="lab">红色误命中（越低越好）</div><div class="delta up">▼ v1 为 15/15</div></div>
-    <div class="kpi"><div class="big">{TOTAL_PRED}</div><div class="lab">v1.4 输出 hook 总数</div><div class="delta muted">v1 为 54，更精不滥</div></div>
+    <div class="kpi win"><div class="big">71.7</div><div class="lab">v1.4 综合分 / 100</div><div class="delta up">▲ 相比 v1 +21.7</div></div>
+    <div class="kpi win"><div class="big">93%</div><div class="lab">红色 badcase 规避率</div><div class="delta up">▲ v1 为 0%</div></div>
+    <div class="kpi"><div class="big">1<span class="muted" style="font-size:18px">/15</span></div><div class="lab">红色误命中（越低越好）</div><div class="delta up">▼ v1 为 15/15</div></div>
+    <div class="kpi"><div class="big">42</div><div class="lab">v1.4 输出 hook 总数</div><div class="delta muted">v1 为 54，更精不滥</div></div>
   </div>
 
   <section>
@@ -595,19 +383,20 @@ HTML = f"""<!DOCTYPE html>
   </section>
 
   <section>
-    <h2><span class="n">2</span>优化效果：v1.4 逐 case 汇总</h2>
-    <p class="lead">先看 case 级指标，再往下看每个 case 的时间轴可视化和具体输出内容。</p>
+    <h2><span class="n">2</span>优化效果：v1.4 逐 case 明细</h2>
+    <p class="lead">红色误命中集中清零；仅 case2「按手印被传送到海岛」这一设定奇观类片段仍被保留（1/15）。</p>
     <table>
       <thead><tr><th>Case</th><th>剧名</th><th class="num">预测数</th><th class="num">🟢保留</th><th class="num">🔴误命中</th><th class="num">🟡保留</th><th class="num">⬜保留</th></tr></thead>
       <tbody>{case_rows}</tbody>
     </table>
-    <div class="note" style="margin-top:16px">下面每个 case 都加了可视化时间轴：上轨是 benchmark， 下轨是 v1.4 实际输出。可以直接看出哪些点被保住、哪些红点被误命中、以及哪些输出是 benchmark 外的额外召回。</div>
+    <div class="note" style="margin-top:16px">时间戳对齐（辅助指标）：加权均 IoU 0.583、加权类型准确率 75%。本项目的评测核心是“语义判准”而非时间精度，故 IoU 类指标仅作参考。</div>
   </section>
 
   <section>
-    <h2><span class="n">3</span>每个 Case 的可视化输出结果</h2>
-    <p class="lead">默认展开前两个 case。其余 case 点开即可看完整时间轴、输出列表、benchmark 对照和 badcase 诊断。</p>
-    {case_visuals}
+    <h2><span class="n">3</span>逐 case 可视化输出（模型 v1.4 实际结果）</h2>
+    <p class="lead">每个 case 展开后有两条时间轴：上排是 <b>模型 v1.4 实际输出</b>的 hook（编号即下方卡片序号），下排是 <b>benchmark 参考</b>（斜纹=没被模型命中）。颜色含义：🟢应保留 / 🔴应删除 / 🟡可选 / ⬜中性 / ➕模型自主新增。卡片里是每条 hook 的时间、类型、判定、未解问题与截点理由。</p>
+    {cases_viz}
+    <p class="note" style="margin-top:16px">读法：<b>🟢 越多越好</b>（保住优质 hook），<b>🔴 越少越好</b>（避开 badcase）。➕ 是 benchmark 没覆盖、模型自己多给的点，不计分，可作为额外候选人工复核。</p>
   </section>
 
   <section>
@@ -619,7 +408,7 @@ HTML = f"""<!DOCTYPE html>
       <span class="step">④ Seed 2.1 Pro 视频理解逐条诊断</span><span class="arrow">→</span>
       <span class="step">⑤ 反推排除/保护规则，写入新 prompt</span>
     </div>
-    <p class="lead" style="margin-top:14px">v1.3（55.0 分）的 badcase 片段送 Pro 逐一看片判断，Pro 判定与人工研判 <b>100% 一致</b>，提炼出以下规则（E5-E7 为本轮新增）：</p>
+    <p class="lead" style="margin-top:14px">v1.3（55.0 分）的 7 个 badcase 片段送 Pro 逐一“亲眼看片判断”，Pro 判定与人工研判 <b>100% 一致</b>，提炼出以下规则（E5-E7 为本轮新增）：</p>
     <table>
       <thead><tr><th>规则</th><th>来源</th><th>命中即删除 / 保留的情形</th></tr></thead>
       <tbody>{rule_rows}</tbody>
@@ -660,6 +449,6 @@ HTML = f"""<!DOCTYPE html>
 </html>
 """
 
-out = REPORT_DIR / "Seed_2.1_Turbo_v1.4_测试报告.html"
+out = ROOT / "reports" / "Seed_2.1_Turbo_v1.4_测试报告.html"
 out.write_text(HTML, encoding="utf-8")
 print("written:", out, "bytes:", len(HTML))
