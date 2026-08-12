@@ -1,33 +1,112 @@
 # Seed 2.1 VLM Hook Prompt Benchmark
 
-这是一个给客户使用的 **Prompt 优化测试项目**。
+这是一个面向客户交付的 **短剧 Hook Prompt 优化测试项目**。
 
-项目目标很简单：
-- 用火山方舟 VLM 模型对短剧视频做理解；
+它解决的是一个非常具体的问题：
+
+- 用火山方舟 VLM 模型理解短剧视频；
 - 提取视频里的 **Hook（钩子点）**；
-- 用统一 benchmark 评估 prompt 版本优劣；
-- 让后续提示词迭代可以稳定比较，不再靠人肉逐条判断。
+- 用同一套 benchmark 评估不同 prompt 版本；
+- 让后续优化结果能稳定对比，而不是每次重新人肉判断。
 
 本项目 **只关注 hook**，不关注 highlights。
 
 ---
 
-## 你可以用它做什么
+## 项目价值
 
-1. 配置你自己的 API Key 和模型 Endpoint ID。
-2. 直接运行 `v1` / `v1.2` / `v2` 或你自己的 prompt。
-3. 输出每个 case 的 hook 结果。
-4. 自动与 benchmark 比较，得到一份清晰的评估报告。
+客户拿到这个仓库后，可以直接做三件事：
 
-这个项目适合做两类事：
-- **prompt 迭代验证**：比较不同 prompt 版本效果；
-- **客户自测**：下载后替换自己的 key / endpoint 即可跑。
+1. 用自己的 API Key 和模型 Endpoint ID 运行现有 prompt；
+2. 新增自己的 prompt 版本做批量测试；
+3. 直接查看 benchmark 分数，判断优化有没有变好。
+
+换句话说，这不是一个“演示脚本”，而是一套可以直接复用的 **prompt 测试与评估基线**。
+
+---
+
+## 交付内容
+
+仓库里已经包含：
+
+- 7 个短剧 case 的测试输入；
+- `v1`、`v1.2`、`v2` 三版 prompt；
+- 一份正式 benchmark；
+- 自动评估脚本；
+- 一组可直接参考的 baseline 结果。
+
+客户下载后，不需要再从零搭框架，只需要：
+
+- 填自己的 API Key；
+- 填自己的模型 Endpoint ID；
+- 运行命令；
+- 看评估报告。
+
+---
+
+## 三步开始
+
+### 第一步：安装依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+### 第二步：填入你自己的配置
+
+```bash
+cp .env.example .env
+```
+
+然后：
+
+- 在 `.env` 里填你自己的 `ARK_API_KEY`
+- 在 `config/cases.yaml` 里填你自己的模型 `Endpoint ID`
+
+### 第三步：运行并评估
+
+```bash
+cd src
+python -m hook_extractor.cli extract --all --prompt v2 --model seed-2-1-turbo
+python -m hook_extractor.cli eval --run results/v2_seed-2-1-turbo
+```
+
+跑完后，直接看：
+
+- `results/<prompt>_<model>/_eval.md`
+
+---
+
+## 客户最该看什么
+
+评估报告里，最重要的是顶部的 **Benchmark 达成度**。
+
+优先看这 3 个值：
+
+- **综合分**
+- **绿色保留率**
+- **红色误命中数**
+
+如果一个新 prompt：
+
+- 绿色保留住了；
+- 红色 badcase 明显减少了；
+
+那它就是更好的版本。
 
 ---
 
 ## 先看结论：这个项目怎么评估 prompt
 
 后续任何 prompt 版本，统一和 `data/benchmark/benchmark.json` 比较。
+
+这份 benchmark 的来源是：
+
+- 使用 **Seed 2.1 Turbo** 模型；
+- 配合 **v1 版提示词**；
+- 跑出一版 hook 时间戳结果；
+- 再对这些结果进行**人工研判**；
+- 最终整理成后续 prompt 迭代统一使用的 benchmark。
 
 benchmark 的规则是：
 
