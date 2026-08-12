@@ -78,7 +78,14 @@ def load_settings(cases_path: Path | None = None) -> Settings:
         raw = yaml.safe_load(f)
 
     cases = [Case(**c) for c in raw.get("cases", [])]
-    models = raw.get("models", {})
+    models = dict(raw.get("models", {}))
+
+    # 合并本地真实 Endpoint ID 覆盖（cases.local.yaml 已在 .gitignore，不提交公开仓库）
+    local_path = cases_path.with_name("cases.local.yaml")
+    if local_path.exists():
+        with open(local_path, encoding="utf-8") as f:
+            local_raw = yaml.safe_load(f) or {}
+        models.update(local_raw.get("models", {}))
 
     return Settings(
         ark_api_key=ark_key,

@@ -9,6 +9,7 @@
 """
 from __future__ import annotations
 
+import base64
 import json
 import re
 from dataclasses import dataclass
@@ -82,6 +83,52 @@ class ArkVideoClient:
             raw_text=text, parsed=parsed, model_id=model_id, usage=usage, error=perr
         )
 
+    def analyze_clip(
+        self,
+        *,
+        clip_path: str,
+        prompt: str,
+        meta_text: str,
+        model: str,
+        fps: float = 2.0,
+        temperature: float = 0.1,
+        timeout: float = 600.0,
+    ) -> ExtractResult:
+        """用 Pro 对本地剪出的片段做视频理解（片段以 base64 data URI 传入）。
+
+        prompt 作为 system（片段分析提示词），meta_text 作为 user 文本（附带该片段的
+        起止时间、人工研判颜色、原 hook_type/description 等）。
+        """
+        model_id = self.settings.resolve_model(model)
+        with open(clip_path, "rb") as f:
+            data_uri = "data:video/mp4;base64," + base64.b64encode(f.read()).decode()
+
+        messages = [
+            {"role": "system", "content": prompt},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "video_url", "video_url": {"url": data_uri, "fps": fps}},
+                    {"type": "text", "text": meta_text},
+                ],
+            },
+        ]
+        try:
+            resp = self.client.chat.completions.create(
+                model=model_id, messages=messages, temperature=temperature, timeout=timeout
+            )
+        except Exception as e:  # noqa: BLE001
+            return ExtractResult(
+                raw_text="", parsed=None, model_id=model_id, usage=None, error=str(e)
+            )
+
+        text = resp.choices[0].message.content or ""
+        usage = resp.usage.model_dump() if getattr(resp, "usage", None) else None
+        parsed, perr = _parse_json(text)
+        return ExtractResult(
+            raw_text=text, parsed=parsed, model_id=model_id, usage=usage, error=perr
+        )
+
 
 def _parse_json(text: str) -> tuple[dict | None, str | None]:
     """容错解析：剥离 ```json 代码块围栏后再解析。"""
@@ -95,11 +142,67 @@ def _parse_json(text: str) -> tuple[dict | None, str | None]:
     try:
         return json.loads(cleaned), None
     except json.JSONDecodeError:
-        # 兜底：截取第一个 { 到最后一个 }
+        # 兜底 1：截取第一个 { 到最后一个 }
         s, e = cleaned.find("{"), cleaned.rfind("}")
         if 0 <= s < e:
             try:
                 return json.loads(cleaned[s : e + 1]), None
-            except json.JSONDecodeError as err:
-                return None, f"JSON 解析失败：{err}"
-        return None, "未在输出中找到合法 JSON"
+            except json.JSONDecodeError:
+                pass
+        # 兜底 2：输出被截断（如 max_tokens 用尽）时，抢救 hook / highlights 数组中
+        # 已完整的对象——逐个匹配平衡花括号的对象再拼回，避免整条结果作废。
+        salvaged = _salvage_truncated(cleaned)
+        if salvaged is not None:
+            return salvaged, "输出疑似被截断，已抢救部分完整条目"
+        return None, "JSON 解析失败（可能被截断）"
+
+
+def _salvage_truncated(text: str) -> dict | None:
+    """从被截断的输出里抢救 highlights / hook 两个数组内已完整的对象。"""
+    def extract_array(key: str) -> list[dict]:
+        m = re.search(rf'"{key}"\s*:\s*\[', text)
+        if not m:
+            return []
+        i = m.end()
+        items: list[dict] = []
+        n = len(text)
+        while i < n:
+            while i < n and text[i] in " \t\r\n,":
+                i += 1
+            if i >= n or text[i] == "]":
+                break
+            if text[i] != "{":
+                break
+            depth, j, in_str, esc = 0, i, False, False
+            while j < n:
+                c = text[j]
+                if in_str:
+                    if esc:
+                        esc = False
+                    elif c == "\\":
+                        esc = True
+                    elif c == '"':
+                        in_str = False
+                elif c == '"':
+                    in_str = True
+                elif c == "{":
+                    depth += 1
+                elif c == "}":
+                    depth -= 1
+                    if depth == 0:
+                        break
+                j += 1
+            if depth != 0:  # 最后一个对象不完整，丢弃
+                break
+            try:
+                items.append(json.loads(text[i : j + 1]))
+            except json.JSONDecodeError:
+                break
+            i = j + 1
+        return items
+
+    hooks = extract_array("hook")
+    highlights = extract_array("highlights")
+    if not hooks and not highlights:
+        return None
+    return {"highlights": highlights, "hook": hooks}

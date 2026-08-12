@@ -14,3 +14,9 @@ venv/
 # 运行产物（可选：如需归档结果可注释掉下一行）
 results/*/
 !results/.gitkeep
+
+# 本地真实 Endpoint ID 覆盖（不提交）
+config/cases.local.yaml
+
+# IDE workspace
+*.code-workspace

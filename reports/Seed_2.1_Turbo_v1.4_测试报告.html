@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seed 2.1 Turbo + 提示词 v1.4 测试报告</title>
+<style>
+  :root {
+    --bg:#0f1220; --card:#1a1f35; --card2:#222844; --ink:#e8ebf5; --muted:#9aa3c0;
+    --line:#2c3358; --green:#37d67a; --red:#ff5c7c; --blue:#4d8dff; --gold:#ffb020;
+    --v14:#37d67a;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:linear-gradient(160deg,#0d1020,#141833 60%,#0f1328);
+    color:var(--ink); font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;
+    line-height:1.65; }
+  .wrap { max-width:1080px; margin:0 auto; padding:48px 24px 80px; }
+  header.hero { text-align:center; padding:40px 20px 28px; }
+  .hero h1 { font-size:30px; margin:0 0 10px; letter-spacing:.5px; }
+  .hero .sub { color:var(--muted); font-size:15px; }
+  .pill { display:inline-block; padding:4px 12px; border-radius:999px; font-size:12px;
+    background:#20264a; color:var(--muted); margin:2px 4px; border:1px solid var(--line); }
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin:28px 0 8px; }
+  .kpi { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px 18px; text-align:center; }
+  .kpi .big { font-size:34px; font-weight:800; }
+  .kpi .lab { color:var(--muted); font-size:13px; margin-top:6px; }
+  .kpi.win .big { color:var(--v14); }
+  .kpi .delta { font-size:12px; margin-top:4px; }
+  .up { color:var(--green); } .down { color:var(--red); }
+  section { background:var(--card); border:1px solid var(--line); border-radius:18px;
+    padding:26px 28px; margin:22px 0; }
+  section h2 { font-size:20px; margin:0 0 16px; display:flex; align-items:center; gap:10px; }
+  section h2 .n { background:var(--blue); color:#fff; width:26px; height:26px; border-radius:8px;
+    display:inline-flex; align-items:center; justify-content:center; font-size:14px; }
+  p.lead { color:var(--muted); margin-top:-4px; }
+  .bar-row { margin:14px 0; }
+  .bar-label { font-size:14px; margin-bottom:6px; }
+  .bar-track { position:relative; background:#141838; border:1px solid var(--line);
+    border-radius:10px; height:30px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:9px 0 0 9px; background:var(--blue); transition:width .6s; }
+  .bar-fill.base { background:#5b6488; }
+  .bar-fill.mid { background:var(--gold); }
+  .bar-fill.v14 { background:linear-gradient(90deg,#37d67a,#28b6ff); }
+  .bar-val { position:absolute; right:10px; top:4px; font-weight:700; font-size:14px; }
+  .bar-sub { font-size:12px; color:var(--ink); margin-top:5px; }
+  .muted { color:var(--muted); }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th,td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+  th { color:var(--muted); font-weight:600; font-size:13px; }
+  td.num { text-align:center; font-variant-numeric:tabular-nums; }
+  td.red { color:var(--red); }
+  tr.hl { background:rgba(55,214,122,.10); }
+  tr.hl td { font-weight:700; }
+  .dim { color:var(--gold); font-weight:600; white-space:nowrap; }
+  .v1cell { color:var(--muted); }
+  .v14cell { color:var(--ink); }
+  .tag { font-weight:800; color:var(--blue); }
+  pre { background:#0c0f22; border:1px solid var(--line); border-radius:12px; padding:18px;
+    overflow:auto; font-size:12.5px; line-height:1.6; color:#cdd4ee; max-height:640px;
+    white-space:pre-wrap; word-break:break-word; }
+  .flow { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:6px 0 2px; }
+  .step { background:var(--card2); border:1px solid var(--line); border-radius:8px; padding:6px 12px; font-size:13px; }
+  .arrow { color:var(--muted); }
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .note { background:#171b38; border-left:3px solid var(--gold); padding:12px 16px; border-radius:8px; font-size:13.5px; color:var(--muted); }
+  footer { text-align:center; color:var(--muted); font-size:12px; margin-top:34px; }
+  @media (max-width:720px) { .kpis{grid-template-columns:repeat(2,1fr);} .cols{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <h1>Seed 2.1 Turbo · 提示词 v1.4 测试报告</h1>
+    <div class="sub">短剧 Hook 时间戳提取 · 自动化提示词迭代（v1 → v1.3 → v1.4）</div>
+    <div style="margin-top:12px">
+      <span class="pill">主模型 Seed 2.1 Turbo（提取）</span>
+      <span class="pill">Seed 2.1 Pro（片段视频理解·诊断）</span>
+      <span class="pill">7 个短剧 · benchmark 54 条 hook</span>
+      <span class="pill">评测口径：绿色保留率 + 红色规避率</span>
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi win"><div class="big">71.7</div><div class="lab">v1.4 综合分 / 100</div><div class="delta up">▲ 相比 v1 +21.7</div></div>
+    <div class="kpi win"><div class="big">93%</div><div class="lab">红色 badcase 规避率</div><div class="delta up">▲ v1 为 0%</div></div>
+    <div class="kpi"><div class="big">1<span class="muted" style="font-size:18px">/15</span></div><div class="lab">红色误命中（越低越好）</div><div class="delta up">▼ v1 为 15/15</div></div>
+    <div class="kpi"><div class="big">42</div><div class="lab">v1.4 输出 hook 总数</div><div class="delta muted">v1 为 54，更精不滥</div></div>
+  </div>
+
+  <section>
+    <h2><span class="n">1</span>综合分对比（4 版本 · 全 7 case 实测）</h2>
+    <p class="lead">评测只看两件事：该保留的绿色有没有保住、该删除的红色有没有删掉。综合分 = 50% × 绿色保留率 + 50% × 红色规避率。</p>
+    
+    <div class="bar-row">
+      <div class="bar-label">v1（原始版·benchmark来源）</div>
+      <div class="bar-track"><div class="bar-fill base" style="width:50.0%"></div>
+        <span class="bar-val">50.0</span></div>
+      <div class="bar-sub">绿保留 2/2　红误命中 15/15　<span class="muted">松散召回，无验证链/无 badcase 排除；红色全部保留</span></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">v1.3（v1.2×v3 融合）</div>
+      <div class="bar-track"><div class="bar-fill mid" style="width:55.0%"></div>
+        <span class="bar-val">55.0</span></div>
+      <div class="bar-sub">绿保留 1/2　红误命中 6/15　<span class="muted">恢复双输出+8步流程+E1-E4；召回偏宽，红色仍漏 6</span></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">v2（聚焦hook+badcase门槛）</div>
+      <div class="bar-track"><div class="bar-fill mid" style="width:61.7%"></div>
+        <span class="bar-val">61.7</span></div>
+      <div class="bar-sub">绿保留 1/2　红误命中 4/15　<span class="muted">hook-only + 三力 + E1-E4</span></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">v1.4（自动迭代终版）</div>
+      <div class="bar-track"><div class="bar-fill v14" style="width:71.7%"></div>
+        <span class="bar-val">71.7</span></div>
+      <div class="bar-sub">绿保留 1/2　红误命中 1/15　<span class="muted">hook-only + 三力 + E1-E7 + P1；红色仅漏 1</span></div>
+    </div>
+    <table style="margin-top:18px">
+      <thead><tr><th>版本</th><th class="num">综合分</th><th class="num">🟢绿保留</th><th class="num">🔴红误命中</th><th class="num">红规避率</th></tr></thead>
+      <tbody><tr class=''><td>v1（原始版·benchmark来源）</td><td class='num'>50.0</td><td class='num'>2/2</td><td class='num'>15/15</td><td class='num'>0%</td></tr><tr class=''><td>v1.3（v1.2×v3 融合）</td><td class='num'>55.0</td><td class='num'>1/2</td><td class='num'>6/15</td><td class='num'>60%</td></tr><tr class=''><td>v2（聚焦hook+badcase门槛）</td><td class='num'>61.7</td><td class='num'>1/2</td><td class='num'>4/15</td><td class='num'>73%</td></tr><tr class='hl'><td>v1.4（自动迭代终版）</td><td class='num'>71.7</td><td class='num'>1/2</td><td class='num'>1/15</td><td class='num'>93%</td></tr></tbody>
+    </table>
+    <p class="note" style="margin-top:16px">说明：v1 本身是 benchmark 的来源，因此它“保住了全部绿色”，但也“保留了全部红色”（红规避率 0%）。真正的优化目标，是在尽量保住绿色的前提下把红色规避率拉高。v1.4 把红色误命中从 15 压到 1。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span>优化效果：v1.4 逐 case 明细</h2>
+    <p class="lead">红色误命中集中清零；仅 case2「按手印被传送到海岛」这一设定奇观类片段仍被保留（1/15）。</p>
+    <table>
+      <thead><tr><th>Case</th><th>剧名</th><th class="num">预测数</th><th class="num">🟢保留</th><th class="num">🔴误命中</th><th class="num">🟡保留</th><th class="num">⬜保留</th></tr></thead>
+      <tbody><tr><td>case1</td><td>蒙眼望断江南雪</td><td class='num'>8</td><td class='num'>0/0</td><td class='num red'>0/1</td><td class='num'>0</td><td class='num'>1</td></tr><tr><td>case2</td><td>渔乡守真心</td><td class='num'>6</td><td class='num'>1/1</td><td class='num red'>1/4</td><td class='num'>0</td><td class='num'>0</td></tr><tr><td>case3</td><td>一次伸手，一生情</td><td class='num'>8</td><td class='num'>0/1</td><td class='num red'>0/3</td><td class='num'>0</td><td class='num'>2</td></tr><tr><td>case4</td><td>新娘当场换新郎</td><td class='num'>5</td><td class='num'>0/0</td><td class='num red'>0/2</td><td class='num'>1</td><td class='num'>1</td></tr><tr><td>case5</td><td>爷爷不请七遍不动筷</td><td class='num'>6</td><td class='num'>0/0</td><td class='num red'>0/2</td><td class='num'>0</td><td class='num'>1</td></tr><tr><td>case6</td><td>狐狸抬轿</td><td class='num'>6</td><td class='num'>0/0</td><td class='num red'>0/2</td><td class='num'>1</td><td class='num'>3</td></tr><tr><td>case7</td><td>别怪我心狠，谁让你动我三十万鱼苗</td><td class='num'>3</td><td class='num'>0/0</td><td class='num red'>0/1</td><td class='num'>0</td><td class='num'>0</td></tr></tbody>
+    </table>
+    <div class="note" style="margin-top:16px">时间戳对齐（辅助指标）：加权均 IoU 0.583、加权类型准确率 75%。本项目的评测核心是“语义判准”而非时间精度，故 IoU 类指标仅作参考。</div>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span>自动化迭代是怎么产出 v1.4 的</h2>
+    <div class="flow">
+      <span class="step">① Turbo + 当前 prompt 提取 hook</span><span class="arrow">→</span>
+      <span class="step">② 与 benchmark 对比，挑出 badcase</span><span class="arrow">→</span>
+      <span class="step">③ ffmpeg 剪出 badcase 片段</span><span class="arrow">→</span>
+      <span class="step">④ Seed 2.1 Pro 视频理解逐条诊断</span><span class="arrow">→</span>
+      <span class="step">⑤ 反推排除/保护规则，写入新 prompt</span>
+    </div>
+    <p class="lead" style="margin-top:14px">v1.3（55.0 分）的 7 个 badcase 片段送 Pro 逐一“亲眼看片判断”，Pro 判定与人工研判 <b>100% 一致</b>，提炼出以下规则（E5-E7 为本轮新增）：</p>
+    <table>
+      <thead><tr><th>规则</th><th>来源</th><th>命中即删除 / 保留的情形</th></tr></thead>
+      <tbody><tr><td class='tag'>E1</td><td class='muted'>v2 迭代</td><td>高潮后失利方发怒/部署求援的过渡节点（停在布置任务/拨电话/下指令）</td></tr><tr><td class='tag'>E2</td><td class='muted'>v2 迭代</td><td>“行动后等待结果”停在无征兆的空等初期（引鱼/下药/布陷阱…）</td></tr><tr><td class='tag'>E3</td><td class='muted'>v2→v1.3 强化</td><td>真相/爆料已说全 + 对方第一波即时反应已现，后续只剩补充语句/情绪宣泄</td></tr><tr><td class='tag'>E4</td><td class='muted'>v2 迭代</td><td>仅主角“察觉异常→戒备”的心理活动收尾，外部冲突尚未爆发</td></tr><tr><td class='tag'>E5</td><td class='muted'>v1.3 迭代</td><td>无实质内容的空洞宣告/铺垫台词（“进门要守规矩”“你给我等着”）</td></tr><tr><td class='tag'>E6</td><td class='muted'>v1.3 迭代</td><td>对已发生事件的评价/感慨类过渡对白；且严禁脑补片段外后续</td></tr><tr><td class='tag'>E7</td><td class='muted'>v1.3 迭代</td><td>指控/揭穿后仅呈现另一方“本能变脸情绪反应”，尚无具体反驳/反制/升级</td></tr><tr><td class='tag'>P1</td><td class='muted'>保护规则</td><td>主角锁定追责对象+情绪化放狠话+下令启动关键行动+真相未揭晓 → 保留</td></tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="n">4</span>提示词改动：v1 → v1.4</h2>
+    <p class="lead">v1 是“松散召回 + 双输出 + 无验证/无排除”；v1.4 是“hook-only + 三力门槛 + 验证链 + E1-E7 排除 + P1 保护”。</p>
+    <table>
+      <thead><tr><th>维度</th><th>v1（原始）</th><th>v1.4（终版）</th></tr></thead>
+      <tbody><tr><td class='dim'>输出范围</td><td class='v1cell'>同时产出 highlights + hook</td><td class='v14cell'>只产出 hook（highlights 恒为 []），算力集中，杜绝“泛看点召回”带来的误保留</td></tr><tr><td class='dim'>hook 定义</td><td class='v1cell'>“关键前置事件已成立、答案未展开”的较松描述</td><td class='v14cell'>收紧为：已发生事实 + 具体未解决问题 + 观众未知 + 答案未展开，并要求“非高度可预期”</td></tr><tr><td class='dim'>三力门槛</td><td class='v1cell'>无</td><td class='v14cell'>未解问题 + 情绪拉力 + 下一步期待，缺一即删（badcase 判定公式）</td></tr><tr><td class='dim'>验证链</td><td class='v1cell'>有三点自检，但无强制字段链</td><td class='v14cell'>established_fact → fact_evidence → open_question → 观众未知 → After End Check → 剧情驱动性</td></tr><tr><td class='dim'>专项排除</td><td class='v1cell'>无</td><td class='v14cell'>E1-E7 七条实证排除规则（高潮后部署/无征兆等待/真相已说全/察觉异常心理收尾/空洞宣告/评价感慨/仅变脸情绪）</td></tr><tr><td class='dim'>保护规则</td><td class='v1cell'>无</td><td class='v14cell'>P1：主角锁定追责对象+下令启动行动+真相未揭晓 → 必须保留，防误删优质 hook</td></tr><tr><td class='dim'>截点规则</td><td class='v1cell'>答案未泄露 &gt; 画面稳定（较笼统）</td><td class='v14cell'>针对渐进式结果、指控揭穿类给出具体截点位置，压制“高潮已过/铺垫过渡”</td></tr><tr><td class='dim'>文案约束</td><td class='v1cell'>较宽松</td><td class='v14cell'>end_point_reason 固定“已成立：…；未展开：…”，description 不得描述未来</td></tr><tr><td class='dim'>排序</td><td class='v1cell'>明确未解问题优先</td><td class='v14cell'>叠加“即时冲击优先”：戛然而止感 &gt; 心理活动/评价/流程完整</td></tr></tbody>
+    </table>
+    <p style="margin-top:16px">v1.4 的 hook 流程（沿用并强化 v1.2 的骨架）：</p>
+    <div class="flow">
+      <span class="step">定义/三力门槛</span><span class="arrow">→</span>
+      <span class="step">候选生成</span><span class="arrow">→</span>
+      <span class="step">验证链</span><span class="arrow">→</span>
+      <span class="step">hook_type</span><span class="arrow">→</span>
+      <span class="step">排除规则 E1-E7</span><span class="arrow">→</span>
+      <span class="step">截点</span><span class="arrow">→</span>
+      <span class="step">去重</span><span class="arrow">→</span>
+      <span class="step">排序（即时冲击优先）</span>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">5</span>最终版提示词 v1.4（完整稿）</h2>
+    <p class="lead">以下为 <code>prompts/v1.4.txt</code> 全文，可直接作为 Seed 2.1 Turbo 的 system prompt 使用。</p>
+    <pre># 漫剧/短剧 Hook 提取 Prompt v1.4（自动化迭代终版）
+#
+# ============================================================
+# 迭代脉络：v1.2（客户版，双输出+8步hook流程）× v3（E1-E4排除+P1保护）→ v1.3 →
+#          （本版 v1.4）由 Seed 2.1 Pro 对 v1.3 的 7 个 badcase 片段逐条视频理解后产出。
+#
+# v1.3 实测：综合分 55.0/100（绿保留 1/2、红误命中 6/15）。Pro 对 7 个 badcase 判定
+#   与人工研判 100% 一致，暴露出 v1.3 的两个系统性问题：
+#   (a) 重新引入 highlights 双输出后，模型召回过宽、把大量“铺垫/过渡/情绪反应”当 hook；
+#   (b) 三力里的“情绪拉力/下一步期待”未被严格执行，可预期的过渡镜头频繁漏网。
+#
+# 本版据此的关键决定（已获授权：此轮可不再保留 v1.2 的核心改动点）：
+#   1. 【回到 hook-only】不再产出 highlights（恒为 []），算力全部投入 hook 判准，
+#      从源头压制“泛看点召回”带来的误保留。
+#   2. 【强化专项排除】在 v3 的 E1-E4 之上，新增 E5-E7（均来自 v1.3 badcase 实证）：
+#        E5 无实质内容的空洞宣告/铺垫台词（“进门要守规矩”“你给我等着”）；
+#        E6 对已发生事件的评价/感慨类过渡对白（且严禁脑补片段外后续）；
+#        E7 一方指控/揭穿后，仅另一方“本能变脸情绪反应”、尚无具体反驳/反制/升级。
+#   3. 【强化 E3】“真相/爆料已说全 + 对方第一波即时反应已现”后停在情绪宣泄 → 删。
+#   4. 【强化“爽点兑现前”门槛】必须已出现“主角即将回应/反击的明确信号”，
+#      停在配角劝慰/担忧的情感过渡不算。
+#   5. 保留 v3 的 P1 保护规则（主角行动前的情绪化放话+启动指令，勿误删）。
+#   保留 v1.2 的 hook 流程骨架：定义→候选→验证链→hook_type→排除→截点→去重→排序。
+# ============================================================
+
+## 1. 角色定义
+
+你是专业的漫剧/短剧内容分析师。本任务只识别一类素材：
+
+- `hook`：用于短视频结尾或追更引导的悬念钩子——已发生的关键事实 + 由其直接产生的具体未解决问题，且答案对观众仍未知、未展开的“结尾停顿点”。
+
+仅依据实际视频内容判断，禁止虚构剧情、人物状态、时间或分集信息；**严禁把片段中未出现的后续剧情作为判定依据**。
+
+质量优先：不为满足数量输出低质量片段；不输出重复、平淡、无关或不符合规则的片段；合格候选不足时允许少于目标数量，绝不降低标准凑数。宁可少，不可滥。
+
+只输出合法 JSON，不输出 Markdown、解释或其他文字。
+
+---
+
+## 2. 时间与分集规则
+
+### 2.1 时间规则
+
+- 所有时间字段统一使用毫秒，类型为 number。
+- 必须满足：`0 &lt;= start_time &lt; end_time &lt;= 视频实际时长`。
+- 不得输出秒、分钟、HH:MM:SS、字符串时间或 `peak_time`。
+- `end_time` 必须与 `description` 一致，并停在自然、清晰的截点。
+- 时间戳需对齐到实际可见的关键帧，不得输出无画面支撑的臆测精度。
+
+### 2.2 分集规则
+
+若提供 `episode_metadata`，设集数为 `N`：
+
+- hook 按 `end_time` 所在集归属，目标数量为 `ceil(0.5N)` 到 `N` 个。
+- `start_time` 可早于 `end_time` 所属集以包含必要前情；`episode_index` 仅表示 `end_time` 所属原剧集。
+- 从 `start_time` 到 `end_time` 必须包含理解该 Hook 所需的前置事实、已成立事件和 `open_question`，不得依赖片段外隐藏剧情。
+
+若未提供 `episode_metadata`：按整段视频识别，不输出 `episode_index`，hook 目标数量为 5-10 个。
+
+只有通过全部规则的候选才计入数量。合格候选不足时输出实际数量。
+
+---
+
+## 3. highlights（本任务不产出）
+
+本任务只交付 hook。输出中 `highlights` 字段恒为空数组 `[]`，不做任何识别。（v1.4 回到 hook-only：v1.3 的双输出让召回过宽、误保留增多，故收回。）
+
+---
+
+## 4. 结尾 hook
+
+hook 流程：定义 → 候选生成 → 验证链 → hook_type → 排除规则 → 截点规则 → 去重 → 排序。
+
+### Step 0：三力硬门槛（最高优先级，输出前逐条自检）
+
+&gt; 有效 hook = 未解问题 + 情绪拉力 + 下一步期待。
+&gt; Badcase = 没有未解决的问题 + 没有情绪拉力 + 没有下一步期待。
+
+每个候选输出前必须同时具备三力，缺一即删除：
+
+- **未解问题**：存在具体、非空、由已发生剧情直接产生的 `open_question`；
+- **情绪拉力**：截点承载明确的紧张/期待/悬置情绪，而非平淡收束或可预期的过渡；
+- **下一步期待**：观众能明确说出“下一秒想知道/想看到什么”，且该期待**并非高度可预期**（如“被揭穿者接下来大概率会否认/撒泼”这种人人能猜到的走向，不算有效期待）。
+
+同时逐条排查以下 6 类通用 badcase，命中任一即删除：
+
+1. 事情已说完：关键信息/事件已完整交代，观众没有还想知道的东西。
+2. 不够吸引：事情虽未结束，但悬念弱、无情绪拉力、不足以驱动追看。
+3. 停在过渡位：`end_time` 落在普通对白、日常过场、转场或非关键节点。
+4. 看不懂：脱离上下文观众不知道发生了什么，结束了也不知道该期待什么。
+5. 高潮已过：最精彩的反转/爽点/揭露已经演完，才停下来（截晚）。
+6. 伪悬念：表面像有问题，本质是一个很平淡、无后续推进价值的点。
+
+### Step 0.5：专项排除清单 E1-E7（命中任一即删除，优先级等同 Step 0）
+
+以下是实测中最容易被误判为有效 hook 的“伪钩子”。E1-E4 来自 v2 迭代，E5-E7 来自 v1.3 迭代：
+
+- **E1 · 高潮后的失利方反应/部署过渡**：核心冲突/爽点已在片段前段完整完成后，后续仅为失利方（多为反派）事后发怒宣泄、商议对策、安排手下求援，且 `end_time` 落在“布置任务/拨打电话/下达指令”这类内部部署的非即时冲突节点——即使撂狠话或提报复计划，也删除。（与 Step 1 的 P1 相反，勿混淆）
+
+- **E2 · 无征兆的“行动后等待结果”初期铺垫**：hook 属“主角实施某行动、等待其结果”类且结果需时间触发（引鱼、下药、布陷阱、播种、等消息等）时，禁止把 `end_time` 选在刚做完动作、仍处等待初期、画面只有主角祈祷/期待/念叨、无任何结果将至征兆的铺垫段。须等“结果即将揭晓的明确信号”出现才成立。例外：行动本身具即时危险/即时结果（拉炸弹、推重物、甩武器）不受此限。
+
+- **E3 · 真相/爆料已说全 + 对方第一波即时反应已现的收尾**：信息悬念/真相揭露/“角色突然出面揭露真相或自认责任”类，停点必须在“核心答案/真相/爆料尚未被完整说出”的临界点，或“核心结果刚出口、当事人即时反应镜头尚未给出”的瞬间。若核心内容已被角色完整表述完毕、且对立方/相关人物的第一波震惊/反驳/即时反应镜头已经呈现，则后续即便还有一句“没说完的补充语句”或角色的情绪宣泄/重复表态，也属高潮已过，删除。
+
+- **E4 · “察觉异常→戒备”的心理活动收尾（危机前铺垫）**：结尾落在主角完成“观察异常→推导→判断‘对方不对劲/有鬼’→握紧武器等戒备”这条心理活动闭环、且尚未出现即时外部冲突/反派回应/更强异常现象时——属危机前铺垫，删除。要成立须截在“异常/冲突即将当场爆发”。
+
+- **E5 · 无实质内容的空洞宣告/铺垫台词（v1.3 新增）**：结尾仅停在**只表态度、无具体实质内容**的宣告性/铺垫性台词（如“进了门就要守规矩”“你给我等着”“我有话要说”“今天有你好看”），且没有配套的具体冲突动作、明确的利害指向或具体事件信息时——属铺垫，删除。只有当这类表态**之后已跟进**具体冲突内容/明确事件信息/利害触发动作、并停在回应或后果揭晓前，才可成立。
+
+- **E6 · 对已发生事件的评价/感慨类过渡对白（v1.3 新增）**：结尾落在角色对**已经发生**的事件发表评价、感慨、总结类普通对白（如旁观者感叹“山外人见了宝物不抢已经难得”），剧情处于平缓推进的铺垫过渡、尚未抛出新的冲突/决定/意外/明确待揭晓核心信息，仅有“剧情尚未结束”的泛化感知时——删除。（并再次强调：严禁把片段外未出现的后续脑补成 hook 依据。）
+
+- **E7 · 指控/揭穿后仅“本能变脸情绪反应”（v1.3 新增）**：结尾落在“一方完成对另一方的指控、揭穿、负面判定后，仅呈现另一方震惊、错愕、愤怒等**本能变脸情绪反应**，尚未出现任何具体的反驳、反制、矛盾升级或反转内容”——这是冲突正式交锋前的铺垫过渡镜头，且后续走向高度可预期（多半是否认/撒泼），悬念拉力不足，删除。要成立须截在“具体反制/升级/反转即将发生”的信号点，而非“刚变脸”。
+
+### Step 1：定义与强度门槛
+
+`hook` 必须同时满足：关键事件已成立；观众存在明确未知问题；答案/回应/后果尚未展开。
+
+核心判断：如果视频停在这个 `end_time`，观众是否会对后续剧情产生**明确且非高度可预期**的期待？
+
+强度门槛：仅“信息没说完”不足以成 Hook。`open_question` 必须具体、非空，由当前已发生剧情直接产生，且与人物目标、剧情冲突、利益变化、身份认知、关系变化或结果发展直接相关。“后面会发生什么”“事情会不会更复杂”等泛泛问题不得作为 Hook。
+
+以下通常不构成有效 Hook（除非该信息会改变观众对人物目标/冲突/选择/剧情方向的理解，或本身就是当前核心秘密）：单纯想知道物品价值 / 单纯想知道人物为什么惊讶 / 单纯想知道设定有多强 / 单纯想知道隐藏信息是什么。
+
+**P1 · 保护规则（防止误删优质 hook）**：当片段结尾停在——主角因**明确的**利益/情感受损事件（亲人受伤、财产被夺、被背叛等）**锁定了追责/复仇对象**，情绪饱满地放出复仇/追责狠话并**下达启动关键行动的指令**（备机/备车赶往事发地、扬言让对方付出代价等），且**关键行动尚未展开、事件真相与结果均未揭晓**——属具备强情绪拉力与明确悬念的**有效 hook，必须保留**，不得当成“单纯情绪宣泄”“失利方部署过渡（E1）”或“空洞宣告（E5）”而删除。
+判别要点：P1 主体是**主导剧情的主角、行动尚未开始、真相未明、有明确追责对象与具体行动指令**；E1 主体是**已吃瘪的失利方、核心冲突已演完**；E5 是**只表态度、无具体事件/利害指向**。P1 的“付出代价”绑定了明确的受损事件与追责对象，故不同于 E5 的空洞放狠话。
+
+### Step 2：候选生成
+
+若能识别原剧集边界，优先扫描集尾、剧情阶段结束、自然转场位置——但集尾只是候选来源，不是 Hook 成立理由。
+
+重点寻找：条件提出但回应未出现；信息出现但影响未知；身份线索出现但真实身份未知；危机已发生但解决未知；反击/打脸/能力释放即将发生；关系变化发生但另一方回应未知。
+
+### Step 3：Hook 验证链
+
+每个 Hook 必须依次通过：
+
+1. `established_fact`：存在已发生的客观剧情事实。
+2. `fact_evidence`：事实由台词、字幕、明确动作或可见剧情信息直接证明。
+3. `open_question`：由已发生事实直接产生具体、非空、可被后续回答的未解问题。
+4. 观众未知：答案不能已通过台词、字幕或画面展示（角色不知≠观众不知）。
+5. After End Check：若 `end_time` 后仍有剧情，检查是否存在与 `open_question` 直接相关的回应/结果/推进；有则作增强验证，无关剧情不得视为答案，不得编造后续。
+6. 剧情驱动性检查：`open_question` 必须影响人物选择、利益变化、身份认知、关系变化、冲突发展或结果走向。
+
+不得将表情、情绪、BGM、氛围、常识推断或模型猜测作为事实或证据。事实无法确认、证据不来自视频、问题依赖推测者，删除候选。
+
+### Step 4：hook_type
+
+`hook_type` 只描述已通过验证链的 Hook，不作为召回/成立判断/排序依据。无法准确分类返回 `null`。
+
+- `身份悬念`：身份线索已出现，真实身份未知。
+- `信息悬念`：关键信息已出现，且会影响人物决策、利益关系、身份认知或剧情方向。
+- `结果悬念`：目标或行动明确，结果未知。（受 E2 约束，“行动后无征兆等待初期”不算）
+- `冲突悬念`：冲突已形成，胜负、选择或回应未知。（受 E7 约束，“仅一方变脸情绪反应、无具体反制”不算）
+- `关系悬念`：关系变化已发生，另一方回应未知。
+- `利益期待`：同时存在明确交易/报价/竞价/买卖/争夺/归属选择中至少一项；结果未定；人物需做选择。
+- `危机爆发`：风险已实际发生（被发现、被威胁、被困、证据被夺）；普通压力和贫困背景不算。（受 E4 约束，“仅主角心里察觉可疑、外部冲突未爆发”不算）
+- `爽点兑现前`：有客观证据表明反击/打脸/能力释放**即将**发生（反击台词完成、动作起手、目标就位、倒计时开始，或主角已就当前冲突发出“即将回应/反击”的明确信号）；主角自信、单纯说狠话、配角劝慰担忧等情感过渡**不算**。
+- `爽点余波`：爽点已完成但产生新的未解问题；他人震惊/害怕/沉默不足以成立。（受 E1/E3 约束）
+
+### Step 5：Hook 排除规则
+
+以下不得输出：
+
+- 答案已出现：价格已公布、身份已揭晓、结果已展示、能力效果已完成展示。
+- 单纯情绪：震惊、惊讶、愤怒、哭泣、激动或沉默（P1 例外：主角行动前的情绪化放话+启动指令属有效 hook）。
+- 推测性悬念：依赖“似乎/可能/仿佛/感觉”等推断成立。
+- 非剧情包装：片头/片尾包装、前情回顾、下集预告、章节标题、营销/导流字幕、非剧情目的的重复镜头。
+- E1-E7（见 Step 0.5）：高潮后失利方部署过渡 / 无征兆等待初期 / 真相已说全的收尾 / 察觉异常的心理收尾 / 空洞宣告铺垫台词 / 评价感慨过渡对白 / 指控后仅本能变脸反应。
+
+已展示价值/系统鉴定结果/能力效果、已完成身份揭露或爽点兑现的内容，默认不作 Hook，除非其后产生新的、明确且未解决的剧情问题。
+
+### Step 6：Hook 截点规则
+
+截点优先级：`答案未泄露 &gt; 画面清晰稳定`。关键事件完整成立后，应立即在回应/结果/后果出现前截断。不得为保留完整表情、等待镜头稳定或保留反应镜头而延后导致答案泄露（此即“高潮已过”，亦是 E3 的成因）。
+
+- 对“渐进式结果”类（E2）：截点要么在**行动即将发起的临界点前**，要么等到**结果将至的明确信号出现时**；不要停在两者之间无征兆的空等阶段。
+- 对“指控/揭穿”类（E7）：不要停在被指控方“刚变脸”的瞬间，要么停在指控刚落、答案未出的临界点，要么等到“具体反制/升级/反转即将发生”的信号点。
+
+### Step 7：去重与文案
+
+按 `open_question` 的语义去重。同一核心问题只保留一个 Hook，优先保留：前提更完整；问题更明确；截点更准确；答案未泄露。只有新的剧情事实产生新的、语义不同的 `open_question` 时，才允许保留多个 Hook。
+
+`description` 只描述 `end_time` 前已发生的内容，不得描述未来。
+
+`end_point_reason` 固定格式：`已成立：XXX；未展开：XXX。`（“已成立”对应 description 中的客观事实，“未展开”直接对应 open_question，不得虚构后续。）
+
+### Step 8：排序规则
+
+按 `明确未解问题 &gt; 截点准确性 &gt; 后续推进确定性 &gt; 剧情重要程度 &gt; 原剧结尾价值 &gt; 视觉和情绪冲击` 排序。“后续推进确定性”仅在当前输入可验证对应后续时参与排序；未展示后续时不因此降权。不得因表情、BGM 或单纯视觉刺激提高排序。
+
+即时冲击优先：同等条件下，“结尾带即时冲突/戛然而止的冲击感”优先于“人物心理活动、评价感慨或流程叙述已完整”。停在“主角刚在心里确认可疑、失利方正在布置任务、角色发表评价感慨、被指控方刚变脸”这类平淡节点，排序必须靠后乃至落入 E1/E4/E6/E7 排除。
+
+---
+
+## 5. 输出格式
+
+始终输出 `highlights` 和 `hook` 两个字段。`highlights` 恒为 `[]`。无合格 hook 时 `hook` 返回 `[]`，不得省略字段。
+
+无 `episode_metadata` 时省略所有 `episode_index`。`open_question` 必须为非空具体问题。`hook_type` 必须为上述枚举值或 `null`。
+
+输出必须为合法 JSON：
+
+{
+  &quot;highlights&quot;: [],
+  &quot;hook&quot;: [
+    {
+      &quot;episode_index&quot;: 2,
+      &quot;start_time&quot;: 580000,
+      &quot;end_time&quot;: 620000,
+      &quot;description&quot;: &quot;买家提出明确报价，男主尚未回应。&quot;,
+      &quot;hook_type&quot;: &quot;利益期待&quot;,
+      &quot;open_question&quot;: &quot;男主是否接受这份报价？&quot;,
+      &quot;end_point_reason&quot;: &quot;已成立：买家已提出明确报价；未展开：男主是否接受报价。&quot;
+    }
+  ]
+}
+</pre>
+  </section>
+
+  <footer>
+    创量魔剪 · 短剧 Hook 提取自动化迭代 ｜ 数据由 Seed 2.1 Turbo 提取、Seed 2.1 Pro 诊断、benchmark 客观评测生成
+  </footer>
+</div>
+</body>
+</html>

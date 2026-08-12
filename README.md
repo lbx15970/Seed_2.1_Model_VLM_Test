@@ -154,11 +154,14 @@ benchmark_score = 100 × (0.5 × 绿色保留率 + 0.5 × 红色规避率)
 ├── requirements.txt
 ├── .env.example
 ├── config/
-│   └── cases.yaml
+│   ├── cases.yaml            # case 视频 + 模型别名（公开仓库用占位 Endpoint ID）
+│   └── cases.local.yaml      # 你自己的真实 Endpoint ID（本地新建，已 gitignore，不提交）
 ├── prompts/
 │   ├── v1.txt
 │   ├── v1.2.txt
-│   └── v2.txt
+│   ├── v2.txt
+│   ├── v3.txt                # 自动化迭代产出的新版（见「自动化迭代」）
+│   └── segment_analysis.txt  # 片段视频分析提示词（喂给 Seed 2.1 Pro，迭代的核心）
 ├── data/
 │   ├── annotations/
 │   │   └── annotations.json
@@ -169,17 +172,18 @@ benchmark_score = 100 × (0.5 × 绿色保留率 + 0.5 × 红色规避率)
 ├── src/
 │   └── hook_extractor/
 │       ├── config.py
-│       ├── ark_client.py
+│       ├── ark_client.py       # Turbo 提取 hook + Pro 分析片段（base64 传视频）
 │       ├── evaluator.py
-│       └── cli.py
+│       ├── segment_analyzer.py # ffmpeg 剪 badcase 片段 + 调 Pro 视频理解
+│       └── cli.py              # extract / eval / analyze 三个子命令
 └── results/
 ```
 
 关键文件：
-- `prompts/`：存放各版本 prompt。
+- `prompts/`：存放各版本 hook 提取 prompt，以及片段分析提示词 `segment_analysis.txt`。
 - `data/benchmark/benchmark.json`：后续所有版本统一对比的标准答案。
-- `results/`：每次运行的输出和评估报告。
-- `config/cases.yaml`：case 视频地址 + 模型别名映射。
+- `results/`：每次运行的输出、评估报告（`_eval.md`）与片段分析报告（`_segment_analysis.md`）。
+- `config/cases.yaml`：case 视频地址 + 模型别名映射（公开占位）；真实 Endpoint ID 放本地 `config/cases.local.yaml`。
 
 ---
 
@@ -275,16 +279,21 @@ python -m hook_extractor.cli eval --run results/v2_seed-2-1-turbo
 
 ## Prompt 版本说明
 
-| 文件 | 用途 |
-| --- | --- |
-| `prompts/v1.txt` | 原始版 prompt |
-| `prompts/v1.2.txt` | 加强语义研判的版本 |
-| `prompts/v2.txt` | 更聚焦 hook 和 badcase 过滤的版本 |
+| 文件 | 用途 | benchmark 综合分 |
+| --- | --- | --- |
+| `prompts/v1.txt` | 原始版 prompt（benchmark 来源） | 50.0 |
+| `prompts/v1.2.txt` | 客户基于 v1 自行优化：收紧 hook 定义 + 8 步验证流程 | — |
+| `prompts/v2.txt` | 聚焦 hook + badcase 三力门槛 + E1-E4 | 61.7 |
+| `prompts/v3.txt` | 自动化迭代：v2 + E1-E4 专项排除 + P1 保护规则 | 66.7（5 case）|
+| `prompts/v1.3.txt` | **v1.2 × v3 融合**：保留 v1.2 双输出+8步流程，融入 E1-E4/P1/三力 | 55.0 |
+| `prompts/v1.4.txt` | **自动化迭代终版**：hook-only + 三力 + **E1-E7** + P1；红色误命中 15→1 | **71.7** |
+
+> 完整测试报告见 [`reports/Seed_2.1_Turbo_v1.4_测试报告.html`](reports/Seed_2.1_Turbo_v1.4_测试报告.html)（关键指标、优化效果、v1→v1.4 提示词改动、v1.4 完整稿）。
 
 你也可以新增自己的版本，例如：
 
 ```text
-prompts/v3.txt
+prompts/v4.txt
 prompts/customer_a_v1.txt
 prompts/ablation_no_badcase_filter.txt
 ```
@@ -292,9 +301,46 @@ prompts/ablation_no_badcase_filter.txt
 然后直接运行：
 
 ```bash
-python -m hook_extractor.cli extract --all --prompt v3 --model seed-2-1-turbo
-python -m hook_extractor.cli eval --run results/v3_seed-2-1-turbo
+python -m hook_extractor.cli extract --all --prompt v4 --model seed-2-1-turbo
+python -m hook_extractor.cli eval --run results/v4_seed-2-1-turbo
 ```
+
+---
+
+## 自动化迭代（Turbo 提取 → benchmark 对比 → Pro 诊断片段 → 产出新 prompt）
+
+本项目内置一条**闭环自动迭代流水线**，让 prompt 优化不靠拍脑袋，而是靠"让 Pro 亲眼看 badcase 视频片段"给出可执行改法。三步：
+
+```bash
+cd src
+
+# ① 用 Turbo + 当前最新 prompt 跑全部 case，得到 hook 时间戳
+python -m hook_extractor.cli extract --all --prompt v2 --model seed-2-1-turbo
+
+# ② 对比 benchmark，报告顶部给出综合分、绿色漏保留、红色误命中
+python -m hook_extractor.cli eval --run results/v2_seed-2-1-turbo
+
+# ③ 对每个 badcase：ffmpeg 剪出片段 → base64 送 Seed 2.1 Pro + 片段分析提示词做视频理解
+#    Pro 判定该片段该保留还是删除、为什么、以及 hook 提取提示词该怎么改
+python -m hook_extractor.cli analyze --run results/v2_seed-2-1-turbo
+```
+
+`analyze` 会产出 `results/<run>/_segment_analysis.md`（人读）与 `_segment_analysis.json`（结构化）。
+你把里面的 `prompt_improvement` 建议汇总，就能写出下一版 prompt。
+
+**为什么用两个模型分工**：
+- **Seed 2.1 Turbo**：跑全片、提取 hook 时间戳（主模型，量大求快）。
+- **Seed 2.1 Pro**：只对剪出来的**单个 badcase 短片段**做深度视频理解（贵但准，用量小）。
+- **`prompts/segment_analysis.txt`（片段视频分析提示词）**：整条流水线的灵魂。它不让 Pro "复述剧情"，而是把"人工研判钩子好坏"翻译成一套可执行的视频理解任务——客观描述 → 定位结束瞬间 → 三力检验 → badcase 命中判断 → keep/drop 判定 → 与人工研判对齐 → 反推提示词改法。改这个文件，基本等于改整个自动迭代的效果。
+
+**v3 就是这样产出的**：v2 实测综合分 61.7/100（绿保留 1/2、红误命中 4/15）。把 5 个 badcase 片段送 Pro，Pro 判定与人工研判 **100% 一致**，据此提炼出：
+- **E1** 高潮后失利方发怒/部署求援的过渡节点 → 删；
+- **E2** "行动后等待结果"停在无征兆的空等初期 → 删；
+- **E3** 真相已说全、即时反应已现，后面只剩补充性尾句 → 删；
+- **E4** 只是主角"察觉异常→戒备"的心理活动收尾、外部冲突未爆发 → 删；
+- **P1**（保护）主角锁定追责对象、放狠话+下令启动关键行动、真相未揭晓 → 必须保留（防误删绿色）。
+
+这 5 条已写进 `prompts/v3.txt` 的 Step 0.5 与 Step 1。
 
 ---
 

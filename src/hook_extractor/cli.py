@@ -133,6 +133,102 @@ def cmd_eval(args: argparse.Namespace) -> None:
     print(f"\n报告已写入：{out}")
 
 
+def cmd_analyze(args: argparse.Namespace) -> None:
+    """对一次运行的 badcase 逐个剪片段，用 Seed 2.1 Pro 做视频理解并给出改进建议。"""
+    from .segment_analyzer import analyze_badcases, collect_badcases
+
+    settings = load_settings()
+    run_dir = Path(args.run)
+    if not run_dir.is_absolute():
+        run_dir = ROOT / run_dir
+    if not run_dir.exists():
+        sys.exit(f"运行目录不存在：{run_dir}")
+
+    bench = json.loads((ROOT / "data" / "benchmark" / "benchmark.json").read_text(encoding="utf-8"))
+    analysis_prompt = (ROOT / "prompts" / "segment_analysis.txt").read_text(encoding="utf-8")
+
+    bads = collect_badcases(run_dir, bench, settings, args.iou)
+    if args.kind != "all":
+        bads = [b for b in bads if b.kind == args.kind]
+    if args.limit:
+        bads = bads[: args.limit]
+    if not bads:
+        print("未发现 badcase（绿色漏保留 / 红色误命中），无需片段分析。")
+        return
+
+    print(f"共 {len(bads)} 个 badcase 待分析，Pro={settings.resolve_model(args.pro_model)}\n")
+    verdicts = analyze_badcases(
+        settings, bads, analysis_prompt=analysis_prompt,
+        pro_model=args.pro_model, fps=args.fps, pad_ms=args.pad,
+    )
+
+    out_json = run_dir / "_segment_analysis.json"
+    payload = []
+    for v in verdicts:
+        clip = v.clip_path
+        if str(clip).startswith(str(ROOT)):
+            clip = str(Path(clip).relative_to(ROOT))
+        payload.append({
+            "bench_id": v.bad.bench_id,
+            "case_id": v.bad.case_id,
+            "case_name": v.bad.case_name,
+            "kind": v.bad.kind,
+            "quality": v.bad.quality,
+            "start_ms": v.bad.start_ms,
+            "end_ms": v.bad.end_ms,
+            "human_content": v.bad.content,
+            "clip": clip,
+            "analysis": v.analysis,
+            "error": v.error,
+            "raw_text": v.raw_text,
+        })
+    out_json.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    md = _render_segment_report(run_dir.name, verdicts)
+    out_md = run_dir / "_segment_analysis.md"
+    out_md.write_text(md, encoding="utf-8")
+    print(md)
+    print(f"\n结构化结果：{out_json}\n人读报告：{out_md}")
+
+
+def _render_segment_report(run_name: str, verdicts: list) -> str:
+    lines = [
+        f"# 片段分析报告（Seed 2.1 Pro 视频理解）· {run_name}",
+        "",
+        "对 badcase 逐个剪出片段送 Pro 做视频理解，判断其作为结尾钩子是否成立，并反推提示词改法。",
+        "",
+        "| bench_id | case | 类型 | 人工 | Pro判定 | 一致 | 命中badcase标准 |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    for v in verdicts:
+        a = v.analysis or {}
+        kind_cn = "🟢漏保留" if v.bad.kind == "green_missed" else "🔴误保留"
+        agree = "✓" if a.get("agree_with_human") else ("—" if v.error else "✗")
+        verdict = a.get("verdict", "ERR" if v.error else "?")
+        hits = ",".join(str(x) for x in (a.get("badcase_hits") or []))
+        lines.append(
+            f"| {v.bad.bench_id} | {v.bad.case_name} | {kind_cn} | {v.bad.quality} "
+            f"| {verdict} | {agree} | {hits} |"
+        )
+    lines += ["", "## 逐条诊断与提示词改进建议", ""]
+    for v in verdicts:
+        a = v.analysis or {}
+        lines.append(f"### {v.bad.bench_id}（{v.bad.case_name}｜{v.bad.kind}）")
+        if v.error:
+            lines.append(f"- ⚠️ 分析失败：{v.error}\n")
+            continue
+        tf = a.get("three_forces", {}) or {}
+        lines += [
+            f"- 片段：{a.get('segment_summary','')}",
+            f"- 结束瞬间：{a.get('end_moment','')}",
+            f"- 三力：未解问题={tf.get('open_question')}｜情绪={tf.get('emotion')}｜下一步期待={tf.get('next_expectation')}",
+            f"- 判定：**{a.get('verdict','?')}**（与人工一致={a.get('agree_with_human')}）｜证据：{a.get('evidence','')}",
+            f"- **提示词改进（{a.get('rule_type','')}）**：{a.get('prompt_improvement','')}",
+            "",
+        ]
+    return "\n".join(lines)
+
+
 def _render_benchmark(bench_evals: list[BenchCaseEval]) -> list[str]:
     """Benchmark 达成度板块（面向"保留绿/删红"目标）。"""
     if not bench_evals:
@@ -248,6 +344,17 @@ def main() -> None:
     pv.add_argument("--run", required=True, help="结果目录，如 results/v2_seed-2-1-turbo")
     pv.add_argument("--iou", type=float, default=0.3, help="IoU 匹配阈值")
     pv.set_defaults(func=cmd_eval)
+
+    pa = sub.add_parser("analyze", help="对 badcase 剪片段 + Seed 2.1 Pro 视频理解，给出提示词改进建议")
+    pa.add_argument("--run", required=True, help="结果目录，如 results/v2_seed-2-1-turbo")
+    pa.add_argument("--iou", type=float, default=0.3, help="IoU 匹配阈值")
+    pa.add_argument("--kind", choices=["all", "green_missed", "red_kept"], default="all",
+                    help="只分析某类 badcase：绿色漏保留 / 红色误保留")
+    pa.add_argument("--limit", type=int, default=0, help="最多分析多少个（0=全部）")
+    pa.add_argument("--pro-model", default="seed-2-1-pro", help="做视频理解的模型别名/Endpoint")
+    pa.add_argument("--fps", type=float, default=2.0, help="片段抽帧率")
+    pa.add_argument("--pad", type=int, default=3000, help="片段前后 padding（ms）")
+    pa.set_defaults(func=cmd_analyze)
 
     args = ap.parse_args()
     args.func(args)
