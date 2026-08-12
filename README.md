@@ -30,7 +30,7 @@
 仓库里已经包含：
 
 - 7 个短剧 case 的测试输入；
-- `v1`、`v1.2`、`v2` 三版 prompt；
+- `v1`、`v1.2`、`v1.3`、`v1.4` 四版 prompt；
 - 一份正式 benchmark；
 - 自动评估脚本；
 - 一组可直接参考的 baseline 结果。
@@ -67,8 +67,8 @@ cp .env.example .env
 
 ```bash
 cd src
-python -m hook_extractor.cli extract --all --prompt v2 --model seed-2-1-turbo
-python -m hook_extractor.cli eval --run results/v2_seed-2-1-turbo
+python -m hook_extractor.cli extract --all --prompt v1.4 --model seed-2-1-turbo
+python -m hook_extractor.cli eval --run results/v1.4_seed-2-1-turbo
 ```
 
 跑完后，直接看：
@@ -159,8 +159,8 @@ benchmark_score = 100 × (0.5 × 绿色保留率 + 0.5 × 红色规避率)
 ├── prompts/
 │   ├── v1.txt
 │   ├── v1.2.txt
-│   ├── v2.txt
-│   ├── v3.txt                # 自动化迭代产出的新版（见「自动化迭代」）
+│   ├── v1.3.txt
+│   ├── v1.4.txt
 │   └── segment_analysis.txt  # 片段视频分析提示词（喂给 Seed 2.1 Pro，迭代的核心）
 ├── data/
 │   ├── annotations/
@@ -238,21 +238,21 @@ cp .env.example .env
 
 ```bash
 cd src
-python -m hook_extractor.cli extract --case case1 --prompt v2 --model seed-2-1-turbo
+python -m hook_extractor.cli extract --case case1 --prompt v1.4 --model seed-2-1-turbo
 ```
 
 ### 4. 跑全部 case
 
 ```bash
 cd src
-python -m hook_extractor.cli extract --all --prompt v2 --model seed-2-1-turbo
+python -m hook_extractor.cli extract --all --prompt v1.4 --model seed-2-1-turbo
 ```
 
 ### 5. 生成评估报告
 
 ```bash
 cd src
-python -m hook_extractor.cli eval --run results/v2_seed-2-1-turbo
+python -m hook_extractor.cli eval --run results/v1.4_seed-2-1-turbo
 ```
 
 ---
@@ -283,12 +283,12 @@ python -m hook_extractor.cli eval --run results/v2_seed-2-1-turbo
 | --- | --- | --- |
 | `prompts/v1.txt` | 原始版 prompt（benchmark 来源） | 50.0 |
 | `prompts/v1.2.txt` | 客户基于 v1 自行优化：收紧 hook 定义 + 8 步验证流程 | — |
-| `prompts/v2.txt` | 聚焦 hook + badcase 三力门槛 + E1-E4 | 61.7 |
-| `prompts/v3.txt` | 自动化迭代：v2 + E1-E4 专项排除 + P1 保护规则 | 66.7（5 case）|
 | `prompts/v1.3.txt` | **v1.2 × v3 融合**：保留 v1.2 双输出+8步流程，融入 E1-E4/P1/三力 | 55.0 |
 | `prompts/v1.4.txt` | **自动化迭代终版**：hook-only + 三力 + **E1-E7** + P1；红色误命中 15→1 | **71.7** |
 
 > 完整测试报告见 [`reports/Seed_2.1_Turbo_v1.4_测试报告.html`](reports/Seed_2.1_Turbo_v1.4_测试报告.html)（关键指标、优化效果、v1→v1.4 提示词改动、v1.4 完整稿）。
+>
+> 注：`v2` / `v3` 为中间迭代版本，结果已沉淀进 `v1.3` / `v1.4`，源文件已从仓库移除。
 
 你也可以新增自己的版本，例如：
 
@@ -315,14 +315,14 @@ python -m hook_extractor.cli eval --run results/v4_seed-2-1-turbo
 cd src
 
 # ① 用 Turbo + 当前最新 prompt 跑全部 case，得到 hook 时间戳
-python -m hook_extractor.cli extract --all --prompt v2 --model seed-2-1-turbo
+python -m hook_extractor.cli extract --all --prompt v1.4 --model seed-2-1-turbo
 
 # ② 对比 benchmark，报告顶部给出综合分、绿色漏保留、红色误命中
-python -m hook_extractor.cli eval --run results/v2_seed-2-1-turbo
+python -m hook_extractor.cli eval --run results/v1.4_seed-2-1-turbo
 
 # ③ 对每个 badcase：ffmpeg 剪出片段 → base64 送 Seed 2.1 Pro + 片段分析提示词做视频理解
 #    Pro 判定该片段该保留还是删除、为什么、以及 hook 提取提示词该怎么改
-python -m hook_extractor.cli analyze --run results/v2_seed-2-1-turbo
+python -m hook_extractor.cli analyze --run results/v1.4_seed-2-1-turbo
 ```
 
 `analyze` 会产出 `results/<run>/_segment_analysis.md`（人读）与 `_segment_analysis.json`（结构化）。
@@ -333,14 +333,14 @@ python -m hook_extractor.cli analyze --run results/v2_seed-2-1-turbo
 - **Seed 2.1 Pro**：只对剪出来的**单个 badcase 短片段**做深度视频理解（贵但准，用量小）。
 - **`prompts/segment_analysis.txt`（片段视频分析提示词）**：整条流水线的灵魂。它不让 Pro "复述剧情"，而是把"人工研判钩子好坏"翻译成一套可执行的视频理解任务——客观描述 → 定位结束瞬间 → 三力检验 → badcase 命中判断 → keep/drop 判定 → 与人工研判对齐 → 反推提示词改法。改这个文件，基本等于改整个自动迭代的效果。
 
-**v3 就是这样产出的**：v2 实测综合分 61.7/100（绿保留 1/2、红误命中 4/15）。把 5 个 badcase 片段送 Pro，Pro 判定与人工研判 **100% 一致**，据此提炼出：
+这套自动化迭代在中间阶段曾产出 `v2` / `v3`，当前已经把有效规则合并进最终保留的 `v1.3` / `v1.4`。当时从 badcase 片段里提炼出的关键规则包括：
 - **E1** 高潮后失利方发怒/部署求援的过渡节点 → 删；
 - **E2** "行动后等待结果"停在无征兆的空等初期 → 删；
 - **E3** 真相已说全、即时反应已现，后面只剩补充性尾句 → 删；
 - **E4** 只是主角"察觉异常→戒备"的心理活动收尾、外部冲突未爆发 → 删；
 - **P1**（保护）主角锁定追责对象、放狠话+下令启动关键行动、真相未揭晓 → 必须保留（防误删绿色）。
 
-这 5 条已写进 `prompts/v3.txt` 的 Step 0.5 与 Step 1。
+这些规则后来继续扩展为 `v1.4` 中的 E1-E7 + P1。
 
 ---
 
