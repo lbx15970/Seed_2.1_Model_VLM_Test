@@ -1,0 +1,78 @@
+{
+  "case_id": "case3",
+  "name": "一次伸手，一生情",
+  "video_url": "https://tos.mobgi.com/tos_beijing/material_1/20260724/12400120711/12400121270/0131d503eb5b3a5e075c8feb46408eab.mp4?uid=12400121270",
+  "prompt": "v1",
+  "model": "seed-2-1-turbo",
+  "fps": null,
+  "elapsed_s": null,
+  "usage": null,
+  "error": null,
+  "note": "该文件由任务.md 中“基于提示词v1版+ Seed 2.1 turbo”的表格结果人工整理而来，用作 v1 基线对比；不包含原始 API raw_text。",
+  "raw_text": null,
+  "parsed": {
+    "highlights": [],
+    "hook": [
+      {
+        "start_time": 338000,
+        "end_time": 346000,
+        "description": "总裁认定外卖员撞了自己父亲还劫财，当场下令备机赶去云城，要让他付出代价。",
+        "hook_type": "冲突悬念"
+      },
+      {
+        "start_time": 405000,
+        "end_time": 415000,
+        "description": "富家女带保镖找上门，认定外卖员撞了父亲，放话律师函马上就到。",
+        "hook_type": "危机爆发"
+      },
+      {
+        "start_time": 558000,
+        "end_time": 570000,
+        "description": "外卖员本指望行车记录仪证明清白，却被告知录像早已被覆盖。",
+        "hook_type": "结果悬念"
+      },
+      {
+        "start_time": 714000,
+        "end_time": 720000,
+        "description": "原告怒斥张政一家哭没用，病房里老人的监护仪突然出现波动。",
+        "hook_type": "结果悬念"
+      },
+      {
+        "start_time": 828000,
+        "end_time": 858000,
+        "description": "原告拿出“肇事逃逸”照片当证据，连妻子都动摇了，问他到底怎么回事。",
+        "hook_type": "冲突悬念"
+      },
+      {
+        "start_time": 892000,
+        "end_time": 905000,
+        "description": "外卖员含泪认罪，女儿突然站出来：人是我撞的，我爸是在替我顶罪。",
+        "hook_type": "关系悬念"
+      },
+      {
+        "start_time": 929000,
+        "end_time": 940000,
+        "description": "法官正要宣判，被救的老人突然出现在法庭门口，全场都惊呆了。",
+        "hook_type": "爽点兑现前"
+      },
+      {
+        "start_time": 960000,
+        "end_time": 1015000,
+        "description": "老人当庭晕倒急需救心丸，原告却一把打翻药瓶，怒斥他还没害够人。",
+        "hook_type": "危机爆发"
+      },
+      {
+        "start_time": 1136000,
+        "end_time": 1148000,
+        "description": "医生当众说出真相：老人亲口说外卖员是他的救命恩人，原告全家当场傻眼。",
+        "hook_type": "爽点余波"
+      },
+      {
+        "start_time": 1405000,
+        "end_time": 1411000,
+        "description": "房东得知外卖员是萧家的救命恩人，当场吓慌，这时楼梯口传来脚步声。",
+        "hook_type": "利益期待"
+      }
+    ]
+  }
+}

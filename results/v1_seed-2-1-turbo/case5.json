@@ -1,0 +1,54 @@
+{
+  "case_id": "case5",
+  "name": "爷爷不请七遍不动筷",
+  "video_url": "https://tos.mobgi.com/tos_beijing/material_1/20260724/12400120711/12400121270/2682c3684ee97e4b694899d56a2cccf4.mp4?uid=12400121270",
+  "prompt": "v1",
+  "model": "seed-2-1-turbo",
+  "fps": null,
+  "elapsed_s": null,
+  "usage": null,
+  "error": null,
+  "note": "该文件由任务.md 中“基于提示词v1版+ Seed 2.1 turbo”的表格结果人工整理而来，用作 v1 基线对比；不包含原始 API raw_text。",
+  "raw_text": null,
+  "parsed": {
+    "highlights": [],
+    "hook": [
+      {
+        "start_time": 12000,
+        "end_time": 17000,
+        "description": "沈家执行多年的七遍请饭规矩，在新媳妇进门当天被打破，媳妇当场收了爷爷的碗。",
+        "hook_type": "信息悬念"
+      },
+      {
+        "start_time": 596000,
+        "end_time": 607000,
+        "description": "女主当众暗指等爷爷开饭把菜都等凉了，爷爷闻言脸色骤沉放下筷子。",
+        "hook_type": "冲突悬念"
+      },
+      {
+        "start_time": 661000,
+        "end_time": 673000,
+        "description": "女主提起两人四年的感情，说吃饭规矩的事得谈谈，男主误以为她后悔了。",
+        "hook_type": "关系悬念"
+      },
+      {
+        "start_time": 787000,
+        "end_time": 798000,
+        "description": "爷爷当众给新孙媳妇下马威，称进了沈家门就要懂沈家的规矩。",
+        "hook_type": "冲突悬念"
+      },
+      {
+        "start_time": 870000,
+        "end_time": 882000,
+        "description": "婆婆嗓子哑到说不出话仍要请爷爷吃饭，女主突然放下水果刀起身走向阳台。",
+        "hook_type": "爽点兑现前"
+      },
+      {
+        "start_time": 880000,
+        "end_time": 894000,
+        "description": "女主打破规矩只叫爷爷一遍吃饭，称吃不吃随他，公公和爷爷当场愣住。",
+        "hook_type": "冲突悬念"
+      }
+    ]
+  }
+}

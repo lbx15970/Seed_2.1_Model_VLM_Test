@@ -1,0 +1,66 @@
+{
+  "case_id": "case6",
+  "name": "狐狸抬轿",
+  "video_url": "https://tos.mobgi.com/tos_beijing/material_1/20260728/12400120711/12400121270/d188124c1043bbccfb01f63f04c9d619.mp4?uid=12400121270",
+  "prompt": "v1",
+  "model": "seed-2-1-turbo",
+  "fps": null,
+  "elapsed_s": null,
+  "usage": null,
+  "error": null,
+  "note": "该文件由任务.md 中“基于提示词v1版+ Seed 2.1 turbo”的表格结果人工整理而来，用作 v1 基线对比；不包含原始 API raw_text。",
+  "raw_text": null,
+  "parsed": {
+    "highlights": [],
+    "hook": [
+      {
+        "start_time": 176000,
+        "end_time": 204000,
+        "description": "王老爹发现两人抬轿走路不留脚印，又发现对方不肯透露求救者身份，疑心两人心里有鬼。",
+        "hook_type": "身份悬念"
+      },
+      {
+        "start_time": 205000,
+        "end_time": 212000,
+        "description": "雪豹带着成群野兽拦在路前，王老爹吓得急忙叫停，灰衣男子却淡定说雪豹不敢伤人。",
+        "hook_type": "结果悬念"
+      },
+      {
+        "start_time": 226000,
+        "end_time": 253000,
+        "description": "诡异巨树拦路，王老爹吓得要原路返回，白衣男子伸手拦住他，称收了好处就不能反悔。",
+        "hook_type": "冲突悬念"
+      },
+      {
+        "start_time": 286000,
+        "end_time": 301000,
+        "description": "白衣男子露出白色利爪撕碎树根，王老爹震惊发现两人不是人，质问他们到底是什么东西，白衣人只说到了山上再解释。",
+        "hook_type": "身份悬念"
+      },
+      {
+        "start_time": 335000,
+        "end_time": 345000,
+        "description": "王老爹被带进山洞，只见洞内密密麻麻全是狐狸，前排狐狸站起身，周身冒起白烟开始化形。",
+        "hook_type": "身份悬念"
+      },
+      {
+        "start_time": 470000,
+        "end_time": 487000,
+        "description": "黑狐刑官误以为王老爹要伤害白狐老祖，扑上去死死咬住他的胳膊，王老爹忍着痛劝说再拖下去老祖就没命了。",
+        "hook_type": "冲突悬念"
+      },
+      {
+        "start_time": 582000,
+        "end_time": 598000,
+        "description": "狐族宝库大门打开，满室奇珍异宝任王老爹挑选，王老爹却直言不肯要，转身就要离开。",
+        "hook_type": "利益期待"
+      },
+      {
+        "start_time": 608000,
+        "end_time": 614700,
+        "description": "白衣男子搬出一袋袋金元宝倒在桌上，王老爹看着满地金元宝，瞬间瞪大双眼，惊得说不出话。",
+        "hook_type": "喜剧反差"
+      }
+    ]
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "case_id": "case1",
+  "name": "蒙眼望断江南雪",
+  "video_url": "https://tos.mobgi.com/tos_beijing/material_1/20260722/12400120711/12400121270/439215e15c5a900732776f9c595de17b.mp4?uid=12400121270",
+  "prompt": "v1",
+  "model": "seed-2-1-turbo",
+  "fps": null,
+  "elapsed_s": null,
+  "usage": null,
+  "error": null,
+  "note": "该文件由任务.md 中“基于提示词v1版+ Seed 2.1 turbo”的表格结果人工整理而来，用作 v1 基线对比；不包含原始 API raw_text。",
+  "raw_text": null,
+  "parsed": {
+    "highlights": [],
+    "hook": [
+      {
+        "start_time": 207000,
+        "end_time": 217000,
+        "description": "沈惊寒亮出契纸，称叶家借寿十年期满，要么交出一半家产清账，要么寿数归还原主；叶苍玄阴沉反问“老夫若是不认呢”。",
+        "hook_type": "冲突悬念"
+      },
+      {
+        "start_time": 643000,
+        "end_time": 678500,
+        "description": "沈惊寒曝出萧擎天十年前借走三成武骨的旧账，称到期不还就武骨归原主、当场暴毙，萧擎天震惊反问“你到底是谁”。",
+        "hook_type": "身份悬念"
+      },
+      {
+        "start_time": 57000,
+        "end_time": 65000,
+        "description": "叶家寿宴上叶苍玄假意赐座，沈惊寒直接拒绝，当众表明来意不是吃席而是来收账。",
+        "hook_type": "信息悬念"
+      },
+      {
+        "start_time": 584000,
+        "end_time": 626000,
+        "description": "萧擎天受叶家委托来找沈惊寒，提出道歉、烧账、滚出江南三个苛刻条件，还拿出匕首威胁，让沈惊寒选自己跪还是他帮忙。",
+        "hook_type": "冲突悬念"
+      },
+      {
+        "start_time": 399000,
+        "end_time": 405000,
+        "description": "沈惊寒收走叶苍玄半条命后转身离开，叶少轩怒喝“站住”，放话绝不会让他安然离开叶家。",
+        "hook_type": "冲突悬念"
+      },
+      {
+        "start_time": 460000,
+        "end_time": 480000,
+        "description": "叶少轩在沈惊寒手里吃了大亏，气急败坏下令手下去请白老和萧擎天来撑腰，称叶家供养多年，他们不可能不出面。",
+        "hook_type": "结果悬念"
+      },
+      {
+        "start_time": 820000,
+        "end_time": 824000,
+        "description": "萧擎天认下沈惊寒“沈少”的身份后，不仅和叶家断交，还拿出自己的银行卡，称这是他这些年攒的家底，递向沈惊寒。",
+        "hook_type": "关系悬念"
+      }
+    ]
+  }
+}

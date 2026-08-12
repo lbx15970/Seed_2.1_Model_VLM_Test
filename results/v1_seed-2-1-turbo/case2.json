@@ -1,0 +1,60 @@
+{
+  "case_id": "case2",
+  "name": "渔乡守真心",
+  "video_url": "https://tos.mobgi.com/tos_beijing/material_1/20260722/12400120711/12400121270/7ee2c33febef6fa6a65bb11b4be17458.mp4?uid=12400121270",
+  "prompt": "v1",
+  "model": "seed-2-1-turbo",
+  "fps": null,
+  "elapsed_s": null,
+  "usage": null,
+  "error": null,
+  "note": "该文件由任务.md 中“基于提示词v1版+ Seed 2.1 turbo”的表格结果人工整理而来，用作 v1 基线对比；不包含原始 API raw_text。",
+  "raw_text": null,
+  "parsed": {
+    "highlights": [],
+    "hook": [
+      {
+        "start_time": 829000,
+        "end_time": 852000,
+        "description": "海上突发龙卷风，小船快被掀翻，牛八一拼尽全力喊着要连人带船进海岛空间。",
+        "hook_type": "危机爆发"
+      },
+      {
+        "start_time": 1000000,
+        "end_time": 1024000,
+        "description": "陈大贵和后妈当众嘲讽牛八一吹牛，根本没带回货，等着看他的笑话。",
+        "hook_type": "爽点兑现前"
+      },
+      {
+        "start_time": 477000,
+        "end_time": 482000,
+        "description": "牛八一提出借真真家的船出海，鱼获分八成给何家，真真听完满脸震惊。",
+        "hook_type": "关系悬念"
+      },
+      {
+        "start_time": 1328000,
+        "end_time": 1331000,
+        "description": "牛八一答应分八成鱼获给何家，还说要再加一句话，所有人都好奇是什么。",
+        "hook_type": "关系悬念"
+      },
+      {
+        "start_time": 44000,
+        "end_time": 49000,
+        "description": "牛八一按完断亲手印，竟凭空消失，被传送到一片陌生的热带海岛。",
+        "hook_type": "设定奇观"
+      },
+      {
+        "start_time": 327000,
+        "end_time": 338000,
+        "description": "牛八一试着把海岛空间的海水倒在海边，盼着能引来鱼，紧张地盯着水面。",
+        "hook_type": "结果悬念"
+      },
+      {
+        "start_time": 1600000,
+        "end_time": 1614000,
+        "description": "牛八一跟村支书提出想批宅基地盖房，村支书听完后皱着眉说这事不好办。",
+        "hook_type": "结果悬念"
+      }
+    ]
+  }
+}

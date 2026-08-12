@@ -1,0 +1,66 @@
+{
+  "case_id": "case7",
+  "name": "别怪我心狠，谁让你动我三十万鱼苗",
+  "video_url": "https://tos.mobgi.com/tos_beijing/material_1/20260728/12400120711/12400121270/68d78e43b2e19171fd615c90cdcf8b06.mp4?uid=12400121270",
+  "prompt": "v1",
+  "model": "seed-2-1-turbo",
+  "fps": null,
+  "elapsed_s": null,
+  "usage": null,
+  "error": null,
+  "note": "该文件由任务.md 中“基于提示词v1版+ Seed 2.1 turbo”的表格结果人工整理而来，用作 v1 基线对比；不包含原始 API raw_text。",
+  "raw_text": null,
+  "parsed": {
+    "highlights": [],
+    "hook": [
+      {
+        "start_time": 290000,
+        "end_time": 306000,
+        "description": "大妈偷鱼还嫌不够，拿出剧毒除草剂要倒进鱼塘，放话要让男主 30 万的鱼全死光，同伙拼命阻拦也没用。",
+        "hook_type": "危机爆发"
+      },
+      {
+        "start_time": 437000,
+        "end_time": 441000,
+        "description": "警察查案时大妈凑过来不停指点，一会嫁祸隔壁村一会说鱼苗有问题，警察一句话问得她瞬间慌乱。",
+        "hook_type": "冲突悬念"
+      },
+      {
+        "start_time": 47000,
+        "end_time": 54000,
+        "description": "男子揭穿大妈偷捞的两条锦鲤价值五千，直言她的行为属于盗窃，大妈当场脸色大变。",
+        "hook_type": "冲突悬念"
+      },
+      {
+        "start_time": 503000,
+        "end_time": 515000,
+        "description": "大妈嘴硬说监控是伪造的，警察当场拿出脚印、工具断面等全套证据，反问她还要不要否认。",
+        "hook_type": "结果悬念"
+      },
+      {
+        "start_time": 173000,
+        "end_time": 197000,
+        "description": "大妈不信鱼塘监控有用，叫来两名同伙密谋偷鱼，打算蒙面进去捞光 30 万的锦鲤，还备好了电鱼工具。",
+        "hook_type": "结果悬念"
+      },
+      {
+        "start_time": 80000,
+        "end_time": 98000,
+        "description": "大妈坐地撒泼带孙子哭，诬陷男主欺负老人小孩，男主直接掏出手机录像，称喊得越大声证据越清楚。",
+        "hook_type": "爽点兑现前"
+      },
+      {
+        "start_time": 102000,
+        "end_time": 120000,
+        "description": "大妈偷鱼被抓后掀桶碎鱼泄愤，男主看着被糟蹋的锦鲤放话，称对方不知好别怪自己心狠。",
+        "hook_type": "爽点兑现前"
+      },
+      {
+        "start_time": 333000,
+        "end_time": 354000,
+        "description": "男主发现满塘死鱼当场报警，称有完整监控拍到嫌疑人面部，放话天亮后要让所有人看清真凶。",
+        "hook_type": "身份悬念"
+      }
+    ]
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "case_id": "case4",
+  "name": "新娘当场换新郎",
+  "video_url": "https://tos.mobgi.com/tos_beijing/material_1/20260724/12400120711/12400121270/fda76a5a7924de1f6b2d74cee0c1805f.mp4?uid=12400121270",
+  "prompt": "v1",
+  "model": "seed-2-1-turbo",
+  "fps": null,
+  "elapsed_s": null,
+  "usage": null,
+  "error": null,
+  "note": "该文件由任务.md 中“基于提示词v1版+ Seed 2.1 turbo”的表格结果人工整理而来，用作 v1 基线对比；不包含原始 API raw_text。",
+  "raw_text": null,
+  "parsed": {
+    "highlights": [],
+    "hook": [
+      {
+        "start_time": 662000,
+        "end_time": 670000,
+        "description": "江离成闯到酒店化妆间，看到盛装的沈念，震惊喊出她的名字。",
+        "hook_type": "冲突悬念"
+      },
+      {
+        "start_time": 63000,
+        "end_time": 68000,
+        "description": "被新郎和闺蜜接连寒心，新娘沈念掏出手机，发消息喊人来抢亲。",
+        "hook_type": "结果悬念"
+      },
+      {
+        "start_time": 200000,
+        "end_time": 202900,
+        "description": "沈念当面质问江离成，是现在跟自己走，还是继续等伴娘苏婉婉。",
+        "hook_type": "冲突悬念"
+      },
+      {
+        "start_time": 285000,
+        "end_time": 291000,
+        "description": "沈念明确表示过往的忍让到此为止，江离成震怒，沈念低头操作手机。",
+        "hook_type": "爽点兑现前"
+      },
+      {
+        "start_time": 397000,
+        "end_time": 404000,
+        "description": "青梅竹马顾砚准时赶到，向穿婚纱的沈念伸出手，邀请她跟自己走。",
+        "hook_type": "结果悬念"
+      },
+      {
+        "start_time": 120000,
+        "end_time": 127000,
+        "description": "吉时将近，苏婉婉当众称补错眼线颜色，要换黑色重新补妆。",
+        "hook_type": "冲突悬念"
+      },
+      {
+        "start_time": 523000,
+        "end_time": 530500,
+        "description": "江离成拼命挣脱阻拦要去追沈念，沈父冷着脸说“不用了”。",
+        "hook_type": "冲突悬念"
+      },
+      {
+        "start_time": 441000,
+        "end_time": 446500,
+        "description": "江离成怒问顾砚凭什么带走沈念，顾砚笑着回应“凭我 8:58 到”。",
+        "hook_type": "信息悬念"
+      }
+    ]
+  }
+}
