@@ -1,0 +1,88 @@
+{
+  "case_id": "case3",
+  "name": "一次伸手，一生情",
+  "video_url": "https://tos.mobgi.com/tos_beijing/material_1/20260724/12400120711/12400121270/0131d503eb5b3a5e075c8feb46408eab.mp4?uid=12400121270",
+  "prompt": "v1.5",
+  "model": "seed-2-1-turbo",
+  "fps": 2.0,
+  "elapsed_s": 233.5,
+  "usage": {
+    "completion_tokens": 11262,
+    "prompt_tokens": 101297,
+    "total_tokens": 112559,
+    "prompt_tokens_details": {
+      "cached_tokens": 5944,
+      "provisioned_tokens": null,
+      "audio_tokens": null,
+      "audio_cached_tokens": null
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 10192,
+      "provisioned_tokens": null,
+      "audio_tokens": null
+    }
+  },
+  "error": null,
+  "raw_text": "{\n  \"highlights\": [],\n  \"hook\": [\n    {\n      \"start_time\": 886000,\n      \"end_time\": 897000,\n      \"description\": \"法官告知张政人证物证俱在，若他拿不出新的证据本庭就要宣判，张政犹豫后低头表示认罪。\",\n      \"hook_type\": \"结果悬念\",\n      \"open_question\": \"法庭是否会判定张政撞人罪名成立？\",\n      \"end_point_reason\": \"已成立：法官称证据充足即将宣判，张政无奈认罪；未展开：法庭最终会如何判决。\"\n    },\n    {\n      \"start_time\": 816000,\n      \"end_time\": 828000,\n      \"description\": \"法庭上萧平安拿出老人昏迷前拍摄的外卖员背影照片，指控这是张政撞人后逃离现场的证据，张政见状震惊不已。\",\n      \"hook_type\": \"冲突悬念\",\n      \"open_question\": \"张政该如何反驳这份对他不利的照片证据？\",\n      \"end_point_reason\": \"已成立：原告方拿出老人拍的外卖员背影照，指控张政撞人逃逸；未展开：张政能否反驳这份证据自证清白。\"\n    },\n    {\n      \"start_time\": 1136000,\n      \"end_time\": 1145000,\n      \"description\": \"医生当庭反驳原告方的指控，称张政不是撞老人的凶手，而是老人的救命恩人，原告方闻言震惊。\",\n      \"hook_type\": \"信息悬念\",\n      \"open_question\": \"医生的证词能否帮张政洗清撞人的冤屈？\",\n      \"end_point_reason\": \"已成立：医生当庭证实张政是老人的救命恩人而非凶手；未展开：该证词能否帮张政翻案。\"\n    },\n    {\n      \"start_time\": 390000,\n      \"end_time\": 414000,\n      \"description\": \"老人的女儿萧晴带人来到医院，一口咬定张政撞了自己的父亲，称明早八点律师函就到，警告张政今晚是最后一次好好说话的机会。\",\n      \"hook_type\": \"冲突悬念\",\n      \"open_question\": \"被冤枉的张政会面临萧晴怎样的追责？\",\n      \"end_point_reason\": \"已成立：萧晴认定张政撞了父亲，放话将发律师函追责；未展开：张政接下来会面临怎样的麻烦。\"\n    },\n    {\n      \"start_time\": 4000,\n      \"end_time\": 16000,\n      \"description\": \"法庭上法官质问被告张政，既然人不是他撞的为什么要扶，张政称自己一生对得起良心，唯独扶老人让他穿上了囚服。\",\n      \"hook_type\": \"冲突悬念\",\n      \"open_question\": \"张政只是扶了老人，为什么会沦为被告穿上囚服？\",\n      \"end_point_reason\": \"已成立：法官当庭质问张政，张政自认扶老人却穿囚服；未展开：张政扶老人沦为被告的真实经过。\"\n    },\n    {\n      \"start_time\": 1231000,\n      \"end_time\": 1247000,\n      \"description\": \"萧云国得知子女冤枉了自己的救命恩人张政，怒斥子女脸面比恩人的清白重要，宣布张政是自己的恩人，谁不记住就滚出萧家。\",\n      \"hook_type\": \"关系悬念\",\n      \"open_question\": \"萧家子女会不会听从父亲的命令向张政赔罪？\",\n      \"end_point_reason\": \"已成立：萧云国怒斥子女冤枉恩人，放话不认恩人就逐出萧家；未展开：萧家子女是否会向张政赔罪。\"\n    },\n    {\n      \"start_time\": 1364000,\n      \"end_time\": 1389000,\n      \"description\": \"张政一家洗清冤屈后回家，发现家门被贴了“惹祸精滚出本楼”的辱骂标语，房东以他们得罪了萧家、网上全是骂名为由要赶他们全家走。\",\n      \"hook_type\": \"结果悬念\",\n      \"open_question\": \"被房东赶出门的张政一家接下来该何去何从？\",\n      \"end_point_reason\": \"已成立：张政一家回家遭房东驱赶，无家可归；未展开：张政一家后续如何解决住处问题。\"\n    }\n  ]\n}",
+  "parsed": {
+    "highlights": [],
+    "hook": [
+      {
+        "start_time": 886000,
+        "end_time": 897000,
+        "description": "法官告知张政人证物证俱在，若他拿不出新的证据本庭就要宣判，张政犹豫后低头表示认罪。",
+        "hook_type": "结果悬念",
+        "open_question": "法庭是否会判定张政撞人罪名成立？",
+        "end_point_reason": "已成立：法官称证据充足即将宣判，张政无奈认罪；未展开：法庭最终会如何判决。"
+      },
+      {
+        "start_time": 816000,
+        "end_time": 828000,
+        "description": "法庭上萧平安拿出老人昏迷前拍摄的外卖员背影照片，指控这是张政撞人后逃离现场的证据，张政见状震惊不已。",
+        "hook_type": "冲突悬念",
+        "open_question": "张政该如何反驳这份对他不利的照片证据？",
+        "end_point_reason": "已成立：原告方拿出老人拍的外卖员背影照，指控张政撞人逃逸；未展开：张政能否反驳这份证据自证清白。"
+      },
+      {
+        "start_time": 1136000,
+        "end_time": 1145000,
+        "description": "医生当庭反驳原告方的指控，称张政不是撞老人的凶手，而是老人的救命恩人，原告方闻言震惊。",
+        "hook_type": "信息悬念",
+        "open_question": "医生的证词能否帮张政洗清撞人的冤屈？",
+        "end_point_reason": "已成立：医生当庭证实张政是老人的救命恩人而非凶手；未展开：该证词能否帮张政翻案。"
+      },
+      {
+        "start_time": 390000,
+        "end_time": 414000,
+        "description": "老人的女儿萧晴带人来到医院，一口咬定张政撞了自己的父亲，称明早八点律师函就到，警告张政今晚是最后一次好好说话的机会。",
+        "hook_type": "冲突悬念",
+        "open_question": "被冤枉的张政会面临萧晴怎样的追责？",
+        "end_point_reason": "已成立：萧晴认定张政撞了父亲，放话将发律师函追责；未展开：张政接下来会面临怎样的麻烦。"
+      },
+      {
+        "start_time": 4000,
+        "end_time": 16000,
+        "description": "法庭上法官质问被告张政，既然人不是他撞的为什么要扶，张政称自己一生对得起良心，唯独扶老人让他穿上了囚服。",
+        "hook_type": "冲突悬念",
+        "open_question": "张政只是扶了老人，为什么会沦为被告穿上囚服？",
+        "end_point_reason": "已成立：法官当庭质问张政，张政自认扶老人却穿囚服；未展开：张政扶老人沦为被告的真实经过。"
+      },
+      {
+        "start_time": 1231000,
+        "end_time": 1247000,
+        "description": "萧云国得知子女冤枉了自己的救命恩人张政，怒斥子女脸面比恩人的清白重要，宣布张政是自己的恩人，谁不记住就滚出萧家。",
+        "hook_type": "关系悬念",
+        "open_question": "萧家子女会不会听从父亲的命令向张政赔罪？",
+        "end_point_reason": "已成立：萧云国怒斥子女冤枉恩人，放话不认恩人就逐出萧家；未展开：萧家子女是否会向张政赔罪。"
+      },
+      {
+        "start_time": 1364000,
+        "end_time": 1389000,
+        "description": "张政一家洗清冤屈后回家，发现家门被贴了“惹祸精滚出本楼”的辱骂标语，房东以他们得罪了萧家、网上全是骂名为由要赶他们全家走。",
+        "hook_type": "结果悬念",
+        "open_question": "被房东赶出门的张政一家接下来该何去何从？",
+        "end_point_reason": "已成立：张政一家回家遭房东驱赶，无家可归；未展开：张政一家后续如何解决住处问题。"
+      }
+    ]
+  }
+}

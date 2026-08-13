@@ -2,13 +2,13 @@
 
 用法：
   # 跑单个 case
-  python -m hook_extractor.cli extract --case case1 --prompt v1.4 --model seed-2-1-turbo
+  python -m hook_extractor.cli extract --case case1 --prompt v1.5 --model seed-2-1-turbo
 
   # 跑全部 case（可指定 fps 覆盖默认）
-  python -m hook_extractor.cli extract --all --prompt v1.4 --fps 2.0
+  python -m hook_extractor.cli extract --all --prompt v1.5 --fps 2.0
 
   # 对某次运行结果做评估（与人工标注对比）
-  python -m hook_extractor.cli eval --run results/v1.4_seed-2-1-turbo
+  python -m hook_extractor.cli eval --run results/v1.5_seed-2-1-turbo
 
 结果目录结构：
   results/<prompt>_<model>/<case_id>.json   # 每个 case 的原始+解析输出
@@ -335,18 +335,18 @@ def main() -> None:
     pe = sub.add_parser("extract", help="调用模型提取 hook")
     pe.add_argument("--case", help="case_id，如 case1")
     pe.add_argument("--all", action="store_true", help="跑全部 case")
-    pe.add_argument("--prompt", default="v1.4", help="提示词版本名（prompts/<name>.txt）")
+    pe.add_argument("--prompt", default="v1.5", help="提示词版本名（prompts/<name>.txt）")
     pe.add_argument("--model", help="模型别名或 Model ID，默认取 .env DEFAULT_MODEL")
     pe.add_argument("--fps", type=float, help="抽帧率，默认取 .env DEFAULT_FPS")
     pe.set_defaults(func=cmd_extract)
 
     pv = sub.add_parser("eval", help="对比人工标注评估某次运行")
-    pv.add_argument("--run", required=True, help="结果目录，如 results/v1.4_seed-2-1-turbo")
+    pv.add_argument("--run", required=True, help="结果目录，如 results/v1.5_seed-2-1-turbo")
     pv.add_argument("--iou", type=float, default=0.3, help="IoU 匹配阈值")
     pv.set_defaults(func=cmd_eval)
 
     pa = sub.add_parser("analyze", help="对 badcase 剪片段 + Seed 2.1 Pro 视频理解，给出提示词改进建议")
-    pa.add_argument("--run", required=True, help="结果目录，如 results/v1.4_seed-2-1-turbo")
+    pa.add_argument("--run", required=True, help="结果目录，如 results/v1.5_seed-2-1-turbo")
     pa.add_argument("--iou", type=float, default=0.3, help="IoU 匹配阈值")
     pa.add_argument("--kind", choices=["all", "green_missed", "red_kept"], default="all",
                     help="只分析某类 badcase：绿色漏保留 / 红色误保留")

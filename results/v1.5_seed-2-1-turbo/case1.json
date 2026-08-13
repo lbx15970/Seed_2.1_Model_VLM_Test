@@ -1,0 +1,72 @@
+{
+  "case_id": "case1",
+  "name": "蒙眼望断江南雪",
+  "video_url": "https://tos.mobgi.com/tos_beijing/material_1/20260722/12400120711/12400121270/439215e15c5a900732776f9c595de17b.mp4?uid=12400121270",
+  "prompt": "v1.5",
+  "model": "seed-2-1-turbo",
+  "fps": 2.0,
+  "elapsed_s": 184.0,
+  "usage": {
+    "completion_tokens": 9695,
+    "prompt_tokens": 100853,
+    "total_tokens": 110548,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "provisioned_tokens": null,
+      "audio_tokens": null,
+      "audio_cached_tokens": null
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 8972,
+      "provisioned_tokens": null,
+      "audio_tokens": null
+    }
+  },
+  "error": null,
+  "raw_text": "{\"highlights\": [], \"hook\": [{\"start_time\": 355000, \"end_time\": 367000, \"description\": \"沈惊寒拿出涛契笔，向叶苍玄给出最后选择：交一半家产清账，或是还寿；叶苍玄出言挑衅，沈惊寒应下准备落笔执行。\", \"hook_type\": \"结果悬念\", \"open_question\": \"沈惊寒的涛契笔真的能让叶苍玄兑现还寿的约定吗？\", \"end_point_reason\": \"已成立：沈惊寒已出示天机账本并给出交家产或还寿的最后通牒，叶苍玄出言挑衅；未展开：涛契笔是否真的能执行还寿。\"}, {\"start_time\": 650000, \"end_time\": 662500, \"description\": \"萧擎天带人马闯入天机当铺欲对沈惊寒动手，沈惊寒翻开账本，点破萧擎天十年前向沈家借走三成武骨的旧事，反问他武道天赋好不好使。\", \"hook_type\": \"信息悬念\", \"open_question\": \"萧擎天真的借过沈家的武道天赋？他得知沈惊寒的身份后会作何反应？\", \"end_point_reason\": \"已成立：沈惊寒已点破萧擎天十年前借武骨的旧事并发出反问；未展开：萧擎天是否承认此事、会做出什么应对。\"}, {\"start_time\": 415000, \"end_time\": 426500, \"description\": \"沈惊寒在叶家寿宴上收走半账后，留下期限：三天内将一半家产送到天机当铺，警告下次来收的就不是寿数了。\", \"hook_type\": \"结果悬念\", \"open_question\": \"叶家会不会按要求交出一半家产？沈惊寒下次来收的会是什么？\", \"end_point_reason\": \"已成立：沈惊寒已收走半账并留下三天交家产的期限与警告；未展开：叶家是否会履约、下次收账的内容是什么。\"}, {\"start_time\": 56000, \"end_time\": 64500, \"description\": \"沈惊寒闯入叶家寿宴，拒绝叶苍玄的赐座，表明自己今日来不是吃席，而是来收账。\", \"hook_type\": \"信息悬念\", \"open_question\": \"沈惊寒在叶家寿宴上要收的是什么账？\", \"end_point_reason\": \"已成立：沈惊寒已闯入寿宴并表明来意是收账；未展开：这笔账的具体内容是什么。\"}, {\"start_time\": 330000, \"end_time\": 347000, \"description\": \"苏宏远在叶家寿宴上当众宣布苏家与沈惊寒的婚约作废，沈惊寒接过婚书，表示婚约可退，但不让苏家扔掉婚书。\", \"hook_type\": \"关系悬念\", \"open_question\": \"沈惊寒为什么不让苏家扔掉婚书？他打算如何处理这门婚约？\", \"end_point_reason\": \"已成立：苏家已当众宣布退婚，沈惊寒接过婚书并表示不让扔；未展开：沈惊寒对婚约的具体打算是什么。\"}]}",
+  "parsed": {
+    "highlights": [],
+    "hook": [
+      {
+        "start_time": 355000,
+        "end_time": 367000,
+        "description": "沈惊寒拿出涛契笔，向叶苍玄给出最后选择：交一半家产清账，或是还寿；叶苍玄出言挑衅，沈惊寒应下准备落笔执行。",
+        "hook_type": "结果悬念",
+        "open_question": "沈惊寒的涛契笔真的能让叶苍玄兑现还寿的约定吗？",
+        "end_point_reason": "已成立：沈惊寒已出示天机账本并给出交家产或还寿的最后通牒，叶苍玄出言挑衅；未展开：涛契笔是否真的能执行还寿。"
+      },
+      {
+        "start_time": 650000,
+        "end_time": 662500,
+        "description": "萧擎天带人马闯入天机当铺欲对沈惊寒动手，沈惊寒翻开账本，点破萧擎天十年前向沈家借走三成武骨的旧事，反问他武道天赋好不好使。",
+        "hook_type": "信息悬念",
+        "open_question": "萧擎天真的借过沈家的武道天赋？他得知沈惊寒的身份后会作何反应？",
+        "end_point_reason": "已成立：沈惊寒已点破萧擎天十年前借武骨的旧事并发出反问；未展开：萧擎天是否承认此事、会做出什么应对。"
+      },
+      {
+        "start_time": 415000,
+        "end_time": 426500,
+        "description": "沈惊寒在叶家寿宴上收走半账后，留下期限：三天内将一半家产送到天机当铺，警告下次来收的就不是寿数了。",
+        "hook_type": "结果悬念",
+        "open_question": "叶家会不会按要求交出一半家产？沈惊寒下次来收的会是什么？",
+        "end_point_reason": "已成立：沈惊寒已收走半账并留下三天交家产的期限与警告；未展开：叶家是否会履约、下次收账的内容是什么。"
+      },
+      {
+        "start_time": 56000,
+        "end_time": 64500,
+        "description": "沈惊寒闯入叶家寿宴，拒绝叶苍玄的赐座，表明自己今日来不是吃席，而是来收账。",
+        "hook_type": "信息悬念",
+        "open_question": "沈惊寒在叶家寿宴上要收的是什么账？",
+        "end_point_reason": "已成立：沈惊寒已闯入寿宴并表明来意是收账；未展开：这笔账的具体内容是什么。"
+      },
+      {
+        "start_time": 330000,
+        "end_time": 347000,
+        "description": "苏宏远在叶家寿宴上当众宣布苏家与沈惊寒的婚约作废，沈惊寒接过婚书，表示婚约可退，但不让苏家扔掉婚书。",
+        "hook_type": "关系悬念",
+        "open_question": "沈惊寒为什么不让苏家扔掉婚书？他打算如何处理这门婚约？",
+        "end_point_reason": "已成立：苏家已当众宣布退婚，沈惊寒接过婚书并表示不让扔；未展开：沈惊寒对婚约的具体打算是什么。"
+      }
+    ]
+  }
+}

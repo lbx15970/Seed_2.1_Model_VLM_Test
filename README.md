@@ -30,7 +30,7 @@
 仓库里已经包含：
 
 - 7 个短剧 case 的测试输入；
-- `v1`、`v1.2`、`v1.3`、`v1.4` 四版 prompt；
+- `v1`、`v1.2`、`v1.3`、`v1.4`、`v1.5` 五版 prompt；
 - 一份正式 benchmark；
 - 自动评估脚本；
 - 一组可直接参考的 baseline 结果。
@@ -67,8 +67,8 @@ cp .env.example .env
 
 ```bash
 cd src
-python -m hook_extractor.cli extract --all --prompt v1.4 --model seed-2-1-turbo
-python -m hook_extractor.cli eval --run results/v1.4_seed-2-1-turbo
+python -m hook_extractor.cli extract --all --prompt v1.5 --model seed-2-1-turbo
+python -m hook_extractor.cli eval --run results/v1.5_seed-2-1-turbo
 ```
 
 跑完后，直接看：
@@ -161,6 +161,7 @@ benchmark_score = 100 × (0.5 × 绿色保留率 + 0.5 × 红色规避率)
 │   ├── v1.2.txt
 │   ├── v1.3.txt
 │   ├── v1.4.txt
+│   ├── v1.5.txt              # 本版：在 v1.4 语义规则上叠加「片段时长约束」（面向自动剪辑）
 │   └── segment_analysis.txt  # 片段视频分析提示词（喂给 Seed 2.1 Pro，迭代的核心）
 ├── data/
 │   ├── annotations/
@@ -238,21 +239,21 @@ cp .env.example .env
 
 ```bash
 cd src
-python -m hook_extractor.cli extract --case case1 --prompt v1.4 --model seed-2-1-turbo
+python -m hook_extractor.cli extract --case case1 --prompt v1.5 --model seed-2-1-turbo
 ```
 
 ### 4. 跑全部 case
 
 ```bash
 cd src
-python -m hook_extractor.cli extract --all --prompt v1.4 --model seed-2-1-turbo
+python -m hook_extractor.cli extract --all --prompt v1.5 --model seed-2-1-turbo
 ```
 
 ### 5. 生成评估报告
 
 ```bash
 cd src
-python -m hook_extractor.cli eval --run results/v1.4_seed-2-1-turbo
+python -m hook_extractor.cli eval --run results/v1.5_seed-2-1-turbo
 ```
 
 ---
@@ -279,16 +280,19 @@ python -m hook_extractor.cli eval --run results/v1.4_seed-2-1-turbo
 
 ## Prompt 版本说明
 
-| 文件 | 用途 | benchmark 综合分 |
-| --- | --- | --- |
-| `prompts/v1.txt` | 原始版 prompt（benchmark 来源） | 50.0 |
-| `prompts/v1.2.txt` | 客户基于 v1 自行优化：收紧 hook 定义 + 8 步验证流程 | — |
-| `prompts/v1.3.txt` | **v1.2 × v3 融合**：保留 v1.2 双输出+8步流程，融入 E1-E4/P1/三力 | 55.0 |
-| `prompts/v1.4.txt` | **自动化迭代终版**：hook-only + 三力 + **E1-E7** + P1；红色误命中 15→1 | **71.7** |
+| 文件 | 用途 | benchmark 综合分 | 片段时长(中位/max) |
+| --- | --- | --- | --- |
+| `prompts/v1.txt` | 原始版 prompt（benchmark 来源） | 50.0 | 11s / 55s |
+| `prompts/v1.2.txt` | 客户基于 v1 自行优化：收紧 hook 定义 + 8 步验证流程 | — | — |
+| `prompts/v1.3.txt` | **v1.2 × v3 融合**：保留 v1.2 双输出+8步流程，融入 E1-E4/P1/三力 | 55.0 | — |
+| `prompts/v1.4.txt` | 自动化迭代：hook-only + 三力 + E1-E7 + P1 | 71.7 ⚠️含水分 | 25.5s / **120.5s** |
+| `prompts/v1.5.txt` | **本版·终版**：v1.4 全部规则 + 时长门槛 D1 + E8 + 跨类型通杀；面向自动剪辑 | **68.3**（真实） | **12.5s / 25s** |
 
-> 完整测试报告见 [`reports/Seed_2.1_Turbo_v1.4_测试报告.html`](reports/Seed_2.1_Turbo_v1.4_测试报告.html)（关键指标、优化效果、v1→v1.4 提示词改动、v1.4 完整稿）。
+> ⚠️ **关于 v1.4 的 71.7**：这是**虚高分**。v1.4 没约束片段时长，产出大量 40-120s 的超长片段，靠"用超长片段把红色坏截点整体包住"骗过 IoU 匹配，红色误命中被低估。v1.5 把片段压回可剪辑长度（max 25s、超 30s 归零）后，红色 badcase 真实暴露，再靠 E8+跨类型通杀压制，得到**去水分后的真实分 68.3（红规避 87%）**——分数看似略低，但片段全部可直接用于自动剪辑，且不含评估水分。
 >
-> 注：`v2` / `v3` 为中间迭代版本，结果已沉淀进 `v1.3` / `v1.4`，源文件已从仓库移除。
+> 完整测试报告见 [`reports/Seed_2.1_Turbo_v1.5_测试报告.html`](reports/Seed_2.1_Turbo_v1.5_测试报告.html)（关键指标、片段时长分布对比、逐 case 可视化、v1→v1.5 提示词改动、v1.5 完整稿）。
+>
+> 注：`v2` / `v3` 为中间迭代版本，结果已沉淀进 `v1.3` / `v1.4` / `v1.5`，源文件已从仓库移除。
 
 你也可以新增自己的版本，例如：
 
@@ -315,14 +319,14 @@ python -m hook_extractor.cli eval --run results/v4_seed-2-1-turbo
 cd src
 
 # ① 用 Turbo + 当前最新 prompt 跑全部 case，得到 hook 时间戳
-python -m hook_extractor.cli extract --all --prompt v1.4 --model seed-2-1-turbo
+python -m hook_extractor.cli extract --all --prompt v1.5 --model seed-2-1-turbo
 
 # ② 对比 benchmark，报告顶部给出综合分、绿色漏保留、红色误命中
-python -m hook_extractor.cli eval --run results/v1.4_seed-2-1-turbo
+python -m hook_extractor.cli eval --run results/v1.5_seed-2-1-turbo
 
 # ③ 对每个 badcase：ffmpeg 剪出片段 → base64 送 Seed 2.1 Pro + 片段分析提示词做视频理解
 #    Pro 判定该片段该保留还是删除、为什么、以及 hook 提取提示词该怎么改
-python -m hook_extractor.cli analyze --run results/v1.4_seed-2-1-turbo
+python -m hook_extractor.cli analyze --run results/v1.5_seed-2-1-turbo
 ```
 
 `analyze` 会产出 `results/<run>/_segment_analysis.md`（人读）与 `_segment_analysis.json`（结构化）。

@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seed 2.1 Turbo + 提示词 v1.5 测试报告</title>
+<style>
+  :root {
+    --bg:#0f1220; --card:#1a1f35; --card2:#222844; --ink:#e8ebf5; --muted:#9aa3c0;
+    --line:#2c3358; --green:#37d67a; --red:#ff5c7c; --blue:#4d8dff; --gold:#ffb020; --v14:#37d67a;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:linear-gradient(160deg,#0d1020,#141833 60%,#0f1328);
+    color:var(--ink); font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif; line-height:1.65; }
+  .wrap { max-width:1080px; margin:0 auto; padding:48px 24px 80px; }
+  header.hero { text-align:center; padding:40px 20px 28px; }
+  .hero h1 { font-size:30px; margin:0 0 10px; letter-spacing:.5px; }
+  .hero .sub { color:var(--muted); font-size:15px; }
+  .pill { display:inline-block; padding:4px 12px; border-radius:999px; font-size:12px;
+    background:#20264a; color:var(--muted); margin:2px 4px; border:1px solid var(--line); }
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin:28px 0 8px; }
+  .kpi { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px 18px; text-align:center; }
+  .kpi .big { font-size:34px; font-weight:800; }
+  .kpi .lab { color:var(--muted); font-size:13px; margin-top:6px; }
+  .kpi.win .big { color:var(--v14); }
+  .kpi .delta { font-size:12px; margin-top:4px; }
+  .up { color:var(--green); } .down { color:var(--red); }
+  section { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:26px 28px; margin:22px 0; }
+  section h2 { font-size:20px; margin:0 0 16px; display:flex; align-items:center; gap:10px; }
+  section h2 .n { background:var(--blue); color:#fff; width:26px; height:26px; border-radius:8px;
+    display:inline-flex; align-items:center; justify-content:center; font-size:14px; }
+  p.lead { color:var(--muted); margin-top:-4px; }
+  .bar-row { margin:14px 0; }
+  .bar-label { font-size:14px; margin-bottom:6px; }
+  .bar-track { position:relative; background:#141838; border:1px solid var(--line); border-radius:10px; height:30px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:9px 0 0 9px; background:var(--blue); transition:width .6s; }
+  .bar-fill.base { background:#5b6488; }
+  .bar-fill.mid { background:var(--gold); }
+  .bar-fill.v14 { background:linear-gradient(90deg,#37d67a,#28b6ff); }
+  .bar-val { position:absolute; right:10px; top:4px; font-weight:700; font-size:14px; }
+  .bar-sub { font-size:12px; color:var(--ink); margin-top:5px; }
+  .muted { color:var(--muted); }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th,td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+  th { color:var(--muted); font-weight:600; font-size:13px; }
+  td.num { text-align:center; font-variant-numeric:tabular-nums; }
+  td.red { color:var(--red); }
+  tr.hl { background:rgba(55,214,122,.10); }
+  tr.hl td { font-weight:700; }
+  .dim { color:var(--gold); font-weight:600; white-space:nowrap; }
+  .v1cell { color:var(--muted); }
+  .v14cell { color:var(--ink); }
+  .tag { font-weight:800; color:var(--blue); }
+  pre { background:#0c0f22; border:1px solid var(--line); border-radius:12px; padding:18px; overflow:auto;
+    font-size:12.5px; line-height:1.6; color:#cdd4ee; max-height:640px; white-space:pre-wrap; word-break:break-word; }
+  .flow { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:6px 0 2px; }
+  .step { background:var(--card2); border:1px solid var(--line); border-radius:8px; padding:6px 12px; font-size:13px; }
+  .arrow { color:var(--muted); }
+  .note { background:#171b38; border-left:3px solid var(--gold); padding:12px 16px; border-radius:8px; font-size:13.5px; color:var(--muted); }
+  /* 时长分布 */
+  .dbar-row { display:flex; align-items:center; gap:12px; margin:12px 0; }
+  .dbar-label { width:44px; flex:0 0 44px; text-align:right; font-weight:700; font-size:13px; }
+  .dbar-track { position:relative; flex:1; height:34px; background:#0c0f22; border:1px solid var(--line); border-radius:6px; }
+  .dband.target { position:absolute; top:0; height:100%; background:rgba(55,214,122,.16); border-left:1px dashed var(--green); border-right:1px dashed var(--green); }
+  .dcap { position:absolute; top:0; height:100%; width:0; border-left:2px dashed var(--red); }
+  .dmark { position:absolute; top:50%; width:14px; height:14px; border-radius:50%; transform:translate(-50%,-50%); border:2px solid #0c0f22; }
+  .dmark.med { width:18px; height:18px; z-index:3; }
+  .dmark.med.base { background:#8b93b5; } .dmark.med.mid { background:var(--gold); } .dmark.med.v14 { background:var(--green); }
+  .dmark.p90 { background:#c9d2ea; z-index:2; } .dmark.mx { background:var(--red); z-index:2; }
+  .dbar-meta { width:250px; flex:0 0 250px; font-size:12px; color:var(--muted); }
+  .dbar-meta b { color:var(--ink); }
+  .dlegend { font-size:12px; color:var(--muted); margin-top:6px; }
+  .dlegend i { display:inline-block; width:11px; height:11px; border-radius:50%; margin:0 4px 0 12px; vertical-align:-1px; }
+  /* 逐 case */
+  .case-block { background:var(--card2); border:1px solid var(--line); border-radius:12px; margin:12px 0; overflow:hidden; }
+  .case-block > summary { cursor:pointer; list-style:none; padding:14px 18px; display:flex; flex-wrap:wrap; align-items:center; gap:10px; user-select:none; }
+  .case-block > summary::-webkit-details-marker { display:none; }
+  .case-block > summary::before { content:"▸"; color:var(--muted); transition:transform .2s; }
+  .case-block[open] > summary::before { transform:rotate(90deg); }
+  .cb-id { font-weight:800; color:var(--blue); font-size:13px; }
+  .cb-name { font-weight:700; }
+  .cb-stat { margin-left:auto; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .cb-body { padding:4px 18px 18px; border-top:1px solid var(--line); }
+  .miss-note { background:rgba(255,92,124,.12); border:1px solid rgba(255,92,124,.4); color:#ffb9c8; border-radius:8px; padding:8px 12px; font-size:13px; margin:12px 0; }
+  .tl-wrap { margin:12px 0 6px; }
+  .tl-row { display:flex; align-items:center; gap:10px; margin:6px 0; }
+  .tl-tag { width:80px; flex:0 0 80px; font-size:12px; color:var(--muted); text-align:right; }
+  .tl-track { position:relative; flex:1; height:26px; background:#0c0f22; border:1px solid var(--line); border-radius:6px; }
+  .tl-seg { position:absolute; top:2px; height:20px; border-radius:4px; font-size:10px; color:#06121f; display:flex; align-items:center; justify-content:center; font-weight:800; overflow:hidden; }
+  .tl-seg.miss { background-image:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(0,0,0,.35) 3px,rgba(0,0,0,.35) 6px); }
+  .tl-axis { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); padding-left:90px; margin-top:2px; }
+  .q-green { background:var(--green); } .q-red { background:var(--red); } .q-yellow { background:var(--gold); }
+  .q-white { background:#c9d2ea; } .q-extra { background:var(--blue); }
+  .legend { display:flex; flex-wrap:wrap; gap:14px; padding-left:90px; margin-top:8px; font-size:12px; color:var(--ink); }
+  .lg { display:inline-flex; align-items:center; gap:5px; }
+  .dot { width:11px; height:11px; border-radius:3px; display:inline-block; }
+  .cards { display:grid; gap:10px; margin-top:14px; }
+  .hook-card { background:#12162e; border:1px solid var(--line); border-left-width:4px; border-radius:10px; padding:12px 14px; }
+  .hook-card.q-green { border-left-color:var(--green); }
+  .hook-card.q-red { border-left-color:var(--red); background:rgba(255,92,124,.06); }
+  .hook-card.q-yellow { border-left-color:var(--gold); }
+  .hook-card.q-white { border-left-color:#c9d2ea; }
+  .hook-card.q-extra { border-left-color:var(--blue); }
+  .hc-head { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:8px; }
+  .hc-idx { font-weight:800; color:var(--muted); }
+  .hc-time { font-variant-numeric:tabular-nums; font-weight:700; font-size:13px; }
+  .hc-verdict { font-size:12.5px; }
+  .chip { background:#232a4c; border:1px solid var(--line); border-radius:999px; padding:2px 9px; font-size:11.5px; color:var(--ink); }
+  .chip.type { background:#1d2b46; color:#8fc0ff; }
+  .chip.muted { color:var(--muted); }
+  .chip.durok { background:#14361f; color:#7be6a4; border-color:#1f5230; }
+  .chip.durwarn { background:#3a3411; color:#ffd98a; border-color:#5a4f18; }
+  .chip.durbad { background:#3a1520; color:#ff9db1; border-color:#5a1f2e; }
+  .hc-q { font-size:13.5px; color:#ffd9a0; margin:2px 0; }
+  .hc-desc { font-size:13px; color:var(--ink); margin:4px 0; }
+  .hc-reason { font-size:12.5px; color:var(--muted); }
+  footer { text-align:center; color:var(--muted); font-size:12px; margin-top:34px; }
+  @media (max-width:720px) { .kpis{grid-template-columns:repeat(2,1fr);} .dbar-meta{display:none;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <h1>Seed 2.1 Turbo · 提示词 v1.5 测试报告</h1>
+    <div class="sub">短剧 Hook 提取 · 自动化提示词迭代 · 本版核心：为“自动剪辑”加入片段时长约束</div>
+    <div style="margin-top:12px">
+      <span class="pill">主模型 Seed 2.1 Turbo（提取）</span>
+      <span class="pill">Seed 2.1 Pro（片段视频理解·诊断）</span>
+      <span class="pill">7 个短剧 · benchmark 54 条</span>
+      <span class="pill">评测：绿色保留率 + 红色规避率 + 片段时长</span>
+    </div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi win"><div class="big">68.3</div><div class="lab">v1.5 综合分 / 100</div>
+      <div class="delta up">▲ 相比 v1 +18.3</div></div>
+    <div class="kpi win"><div class="big">87%</div><div class="lab">红色 badcase 规避率</div><div class="delta muted">v1 为 0%</div></div>
+    <div class="kpi"><div class="big">12.5<span class="muted" style="font-size:18px">s</span></div>
+      <div class="lab">片段时长中位（目标 8-20s）</div><div class="delta up">◀ v1.4 为 25.5s</div></div>
+    <div class="kpi"><div class="big">25<span class="muted" style="font-size:18px">s</span></div>
+      <div class="lab">最长片段（v1.4 达 120s）</div>
+      <div class="delta up">超 30s 片段 16→0</div></div>
+  </div>
+
+  <section>
+    <h2><span class="n">1</span>为什么要做 v1.5：时长失控 + 评估失真</h2>
+    <p class="lead">v1.4 在语义判准上做得不错（综合分 71.7），但它<b>完全没有约束单条 hook 的片段时长</b>，带来两个直接问题。</p>
+    <div class="note" style="border-left-color:var(--red)">
+      <b>业务问题</b>：hook 片段要直接剪成短视频结尾，v1.4 却产出大量 40-120s 的超长片段（case7 只有 3 段、全部 80-120s；case5 出现 114.5s），无法直接用于成片。<br><br>
+      <b>评估问题</b>：v1.4 对红色 badcase 的“规避”有相当一部分是<b>假象</b>——它并非真正跳过坏截点，而是用一个超长片段把红色片段整体<b>包含</b>了进去，导致与 benchmark 的 IoU 匹配错配、红色误命中被低估。换句话说，v1.4 的高分里掺了水。
+    </div>
+    <p style="margin-top:14px">v1.5 的做法分两步：<b>①</b> 沿用 v1.4 的全部语义规则（三力 / E1-E7 / P1 / 验证链）不放松，叠加时长门槛 <b>D1</b>——以 v1 真实分布为锚（中位≈11s），目标 8-20s、硬上限 30s；过长时<b>只收紧 start_time 或拆分为多条</b>，绝不延后 end_time 压缩（那会截晚泄底）。<b>②</b> 时长压回正常后，被超长片段掩盖的红色 badcase 真实暴露（红误命中一度回到 6/15）；对这些 badcase 再跑一轮 Seed 2.1 Pro 片段诊断，反推出 <b>E8（日常事务弱悬念）+ 3 条跨类型通杀 + 强化 P1</b>，把红误命中重新压到 2/15。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span>片段时长分布对比（核心改进）</h2>
+    <p class="lead">绿色带=目标区间 8-20s，红色虚线=硬上限 30s。圆点：<i style="color:#8b93b5">●</i>中位 <i style="color:#c9d2ea">●</i>p90 <i style="color:var(--red)">●</i>max。</p>
+    <div class='dbar-row'><span class='dbar-label'>v1</span>
+    <div class="dbar-track">
+      <div class="dband target" style="left:6.7%;width:10.0%" title="目标 8-20s"></div>
+      <div class="dcap" style="left:25.0%" title="硬上限 30s"></div>
+      <div class="dmark med base" style="left:9.2%" title="中位 11.0s"></div>
+      <div class="dmark p90" style="left:22.5%" title="p90 27.0s"></div>
+      <div class="dmark mx" style="left:45.8%" title="max 55.0s"></div>
+    </div><span class='dbar-meta'>中位 <b>11.0s</b> · p90 27.0s · max 55.0s</span></div><div class='dbar-row'><span class='dbar-label'>v1.4</span>
+    <div class="dbar-track">
+      <div class="dband target" style="left:6.7%;width:10.0%" title="目标 8-20s"></div>
+      <div class="dcap" style="left:25.0%" title="硬上限 30s"></div>
+      <div class="dmark med mid" style="left:21.2%" title="中位 25.5s"></div>
+      <div class="dmark p90" style="left:62.1%" title="p90 74.5s"></div>
+      <div class="dmark mx" style="left:100.0%" title="max 120.5s"></div>
+    </div><span class='dbar-meta'>中位 <b>25.5s</b> · p90 74.5s · max 120.5s</span></div><div class='dbar-row'><span class='dbar-label'>v1.5</span>
+    <div class="dbar-track">
+      <div class="dband target" style="left:6.7%;width:10.0%" title="目标 8-20s"></div>
+      <div class="dcap" style="left:25.0%" title="硬上限 30s"></div>
+      <div class="dmark med v14" style="left:10.4%" title="中位 12.5s"></div>
+      <div class="dmark p90" style="left:15.0%" title="p90 18.0s"></div>
+      <div class="dmark mx" style="left:20.8%" title="max 25.0s"></div>
+    </div><span class='dbar-meta'>中位 <b>12.5s</b> · p90 18.0s · max 25.0s</span></div>
+    <table style="margin-top:18px">
+      <thead><tr><th>版本</th><th class="num">片段数</th><th class="num">中位</th><th class="num">p90</th><th class="num">max</th><th class="num">均值</th><th class="num">超 30s 片段</th></tr></thead>
+      <tbody><tr class=''><td>v1（基线）</td><td class='num'>54</td><td class='num'>11.0s</td><td class='num'>27.0s</td><td class='num'>55.0s</td><td class='num'>13.6s</td><td class='num'>3（6%）</td></tr><tr class=''><td>v1.4（超长）</td><td class='num'>42</td><td class='num'>25.5s</td><td class='num'>74.5s</td><td class='num'>120.5s</td><td class='num'>34.1s</td><td class='num'>16（38%）</td></tr><tr class='hl'><td>v1.5（本版）</td><td class='num'>40</td><td class='num'>12.5s</td><td class='num'>18.0s</td><td class='num'>25.0s</td><td class='num'>13.7s</td><td class='num'>0（0%）</td></tr></tbody>
+    </table>
+    <p class="note" style="margin-top:16px">读法：v1.4 的中位/最大值远超目标区间，且有多条 >30s；v1.5 把分布重新压回目标带内，超 30s 片段从 16 降到 0。代价极小——语义综合分从 v1.4 的虚高 71.7 到 v1.5 的真实 68.3（下节详解为何 v1.4 是虚高）。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span>综合分对比（语义质量 · 全 7 case 实测）</h2>
+    <p class="lead">综合分 = 50% × 绿色保留率 + 50% × 红色规避率。<b>注意别被 v1.4 的 71.7 误导</b>：那是靠“超长片段包住红色坏截点”骗过 IoU 匹配得来的虚高分。v1.5 把片段压回可剪辑长度后，被掩盖的红色 badcase 会真实暴露——即便如此，v1.5 靠 E8+跨类型通杀仍拿到 <b>68.3 的真实分（红规避 87%）</b>，仅比 v1.4 的注水分低 3.4，却换来“片段全部可直接用于剪辑”。</p>
+    
+    <div class="bar-row">
+      <div class="bar-label">v1（原始版·benchmark 来源）</div>
+      <div class="bar-track"><div class="bar-fill base" style="width:50.0%"></div>
+        <span class="bar-val">50.0</span></div>
+      <div class="bar-sub">绿保留 2/2　红误命中 15/15　<span class="muted">松散召回，无验证链/无排除；红色全部保留，但片段时长自然（中位≈11s）</span></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">v1.3（v1.2×v3 融合）</div>
+      <div class="bar-track"><div class="bar-fill mid" style="width:55.0%"></div>
+        <span class="bar-val">55.0</span></div>
+      <div class="bar-sub">绿保留 1/2　红误命中 6/15　<span class="muted">恢复双输出+8步流程+E1-E4；召回偏宽</span></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">v2（聚焦 hook+badcase 门槛）</div>
+      <div class="bar-track"><div class="bar-fill mid" style="width:61.7%"></div>
+        <span class="bar-val">61.7</span></div>
+      <div class="bar-sub">绿保留 ?/?　红误命中 ?/?　<span class="muted">hook-only + 三力 + E1-E4</span></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">v1.4（无时长约束·分数含水分）</div>
+      <div class="bar-track"><div class="bar-fill mid" style="width:71.7%"></div>
+        <span class="bar-val">71.7</span></div>
+      <div class="bar-sub">绿保留 1/2　红误命中 1/15　<span class="muted">hook-only + 三力 + E1-E7 + P1；但片段普遍超长（中位 25.5s、max 120s），⚠ 红色规避靠“超长片段包住坏截点”，71.7 为虚高</span></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">v1.5（本版·时长约束+E8/通杀强化）</div>
+      <div class="bar-track"><div class="bar-fill v14" style="width:68.3%"></div>
+        <span class="bar-val">68.3</span></div>
+      <div class="bar-sub">绿保留 1/2　红误命中 2/15　<span class="muted">在 v1.4 语义规则上叠加时长门槛 D1 + E8 + 跨类型通杀；时长全达标(max 25s)，68.3 为去水分后的真实分</span></div>
+    </div>
+    <table style="margin-top:18px">
+      <thead><tr><th>版本</th><th class="num">综合分</th><th class="num">🟢绿保留</th><th class="num">🔴红误命中</th><th class="num">红规避率</th></tr></thead>
+      <tbody><tr class=''><td>v1（原始版·benchmark 来源）</td><td class='num'>50.0</td><td class='num'>2/2</td><td class='num'>15/15</td><td class='num'>0%</td></tr><tr class=''><td>v1.3（v1.2×v3 融合）</td><td class='num'>55.0</td><td class='num'>1/2</td><td class='num'>6/15</td><td class='num'>60%</td></tr><tr class=''><td>v2（聚焦 hook+badcase 门槛）</td><td class='num'>61.7</td><td class='num'>?/?</td><td class='num'>?/?</td><td class='num'>—</td></tr><tr class=''><td>v1.4（无时长约束·分数含水分）</td><td class='num'>71.7</td><td class='num'>1/2</td><td class='num'>1/15</td><td class='num'>93%</td></tr><tr class='hl'><td>v1.5（本版·时长约束+E8/通杀强化）</td><td class='num'>68.3</td><td class='num'>1/2</td><td class='num'>2/15</td><td class='num'>87%</td></tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="n">4</span>逐 case 可视化输出（模型 v1.5 实际结果）</h2>
+    <p class="lead">上排=模型 v1.5 实际输出（编号=下方卡片序号、hover 看时长），下排=benchmark 参考（斜纹=没被命中）。卡片时长标签：<span style="color:#7be6a4">绿=达标 8-20s</span> / <span style="color:#ffd98a">黄=偏长 20-30s</span> / <span style="color:#ff9db1">红=超 30s</span>。</p>
+    
+    <details class="case-block" >
+      <summary>
+        <span class="cb-id">case1</span>
+        <span class="cb-name">蒙眼望断江南雪</span>
+        <span class="cb-stat">输出 5 · 🟢0/0 · 🔴0/1 · 🟡0 · ⬜2 · 时长中位 12.0s/max 17.0s</span>
+      </summary>
+      <div class="cb-body">
+        
+        <div class="tl-wrap">
+          <div class="tl-row"><span class="tl-tag">模型 v1.5</span><div class="tl-track"><div class='tl-seg q-extra' style='left:43.08%;width:1.46%' title='#1 05:55-06:07 · 12s · 结果悬念'>1</div><div class='tl-seg q-white' style='left:78.88%;width:1.52%' title='#2 10:50-11:02 · 12s · 信息悬念'>2</div><div class='tl-seg q-extra' style='left:50.36%;width:1.40%' title='#3 06:55-07:06 · 12s · 结果悬念'>3</div><div class='tl-seg q-white' style='left:6.80%;width:1.03%' title='#4 00:56-01:04 · 8s · 信息悬念'>4</div><div class='tl-seg q-extra' style='left:40.05%;width:2.06%' title='#5 05:30-05:47 · 17s · 关系悬念'>5</div></div></div>
+          <div class="tl-row"><span class="tl-tag">benchmark</span><div class="tl-track"><div class='tl-seg q-white miss' style='left:25.12%;width:1.21%' title='case1-h1 命中白色 · 中性 · 03:27-03:37 · 未命中'></div><div class='tl-seg q-white' style='left:78.03%;width:4.31%' title='case1-h2 命中白色 · 中性 · 10:43-11:18 · 命中'></div><div class='tl-seg q-white' style='left:6.92%;width:0.97%' title='case1-h3 命中白色 · 中性 · 00:57-01:05 · 命中'></div><div class='tl-seg q-white miss' style='left:70.87%;width:5.10%' title='case1-h4 命中白色 · 中性 · 09:44-10:26 · 未命中'></div><div class='tl-seg q-white miss' style='left:48.42%;width:0.80%' title='case1-h5 命中白色 · 中性 · 06:39-06:45 · 未命中'></div><div class='tl-seg q-red miss' style='left:55.83%;width:2.43%' title='case1-h6 命中 badcase · 应删除（误命中） · 07:40-08:00 · 未命中'></div><div class='tl-seg q-white miss' style='left:99.51%;width:0.80%' title='case1-h7 命中白色 · 中性 · 13:40-13:44 · 未命中'></div></div></div>
+          <div class="tl-axis"><span>00:00</span><span>13:44</span></div>
+          <div class="legend"><span class='lg'><i class='dot q-green'></i>🟢 应保留</span><span class='lg'><i class='dot q-red'></i>🔴 应删除</span><span class='lg'><i class='dot q-yellow'></i>🟡 可选</span><span class='lg'><i class='dot q-white'></i>⬜ 中性</span><span class='lg'><i class='dot q-extra'></i>➕ 模型新增</span><span class="muted">（斜纹=benchmark 未被命中；hover 看时长与详情）</span></div>
+        </div>
+        <div class="cards">
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#1</span>
+          <span class="hc-time">05:55 → 06:07</span>
+          <span class='chip durok'>12s</span>
+          <span class="chip type">结果悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>沈惊寒的涛契笔真的能让叶苍玄兑现还寿的约定吗？</div>
+        <div class="hc-desc">沈惊寒拿出涛契笔，向叶苍玄给出最后选择：交一半家产清账，或是还寿；叶苍玄出言挑衅，沈惊寒应下准备落笔执行。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：沈惊寒已出示天机账本并给出交家产或还寿的最后通牒，叶苍玄出言挑衅；未展开：涛契笔是否真的能执行还寿。</div>
+      </div>
+      <div class="hook-card q-white">
+        <div class="hc-head">
+          <span class="hc-idx">#2</span>
+          <span class="hc-time">10:50 → 11:02</span>
+          <span class='chip durok'>12s</span>
+          <span class="chip type">信息悬念</span>
+          <span class="hc-verdict">⬜ 命中白色 · 中性</span>
+          <span class='chip'>IoU 0.352</span><span class='chip'>↔ case1-h2</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>萧擎天真的借过沈家的武道天赋？他得知沈惊寒的身份后会作何反应？</div>
+        <div class="hc-desc">萧擎天带人马闯入天机当铺欲对沈惊寒动手，沈惊寒翻开账本，点破萧擎天十年前向沈家借走三成武骨的旧事，反问他武道天赋好不好使。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：沈惊寒已点破萧擎天十年前借武骨的旧事并发出反问；未展开：萧擎天是否承认此事、会做出什么应对。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#3</span>
+          <span class="hc-time">06:55 → 07:06</span>
+          <span class='chip durok'>12s</span>
+          <span class="chip type">结果悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>叶家会不会按要求交出一半家产？沈惊寒下次来收的会是什么？</div>
+        <div class="hc-desc">沈惊寒在叶家寿宴上收走半账后，留下期限：三天内将一半家产送到天机当铺，警告下次来收的就不是寿数了。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：沈惊寒已收走半账并留下三天交家产的期限与警告；未展开：叶家是否会履约、下次收账的内容是什么。</div>
+      </div>
+      <div class="hook-card q-white">
+        <div class="hc-head">
+          <span class="hc-idx">#4</span>
+          <span class="hc-time">00:56 → 01:04</span>
+          <span class='chip durok'>8s</span>
+          <span class="chip type">信息悬念</span>
+          <span class="hc-verdict">⬜ 命中白色 · 中性</span>
+          <span class='chip'>IoU 0.833</span><span class='chip'>↔ case1-h3</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>沈惊寒在叶家寿宴上要收的是什么账？</div>
+        <div class="hc-desc">沈惊寒闯入叶家寿宴，拒绝叶苍玄的赐座，表明自己今日来不是吃席，而是来收账。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：沈惊寒已闯入寿宴并表明来意是收账；未展开：这笔账的具体内容是什么。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#5</span>
+          <span class="hc-time">05:30 → 05:47</span>
+          <span class='chip durok'>17s</span>
+          <span class="chip type">关系悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>沈惊寒为什么不让苏家扔掉婚书？他打算如何处理这门婚约？</div>
+        <div class="hc-desc">苏宏远在叶家寿宴上当众宣布苏家与沈惊寒的婚约作废，沈惊寒接过婚书，表示婚约可退，但不让苏家扔掉婚书。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：苏家已当众宣布退婚，沈惊寒接过婚书并表示不让扔；未展开：沈惊寒对婚约的具体打算是什么。</div>
+      </div></div>
+      </div>
+    </details>
+    <details class="case-block" >
+      <summary>
+        <span class="cb-id">case2</span>
+        <span class="cb-name">渔乡守真心</span>
+        <span class="cb-stat">输出 6 · 🟢1/1 · 🔴0/4 · 🟡0 · ⬜1 · 时长中位 12.5s/max 18.0s</span>
+      </summary>
+      <div class="cb-body">
+        
+        <div class="tl-wrap">
+          <div class="tl-row"><span class="tl-tag">模型 v1.5</span><div class="tl-track"><div class='tl-seg q-green' style='left:51.73%;width:1.12%' title='#1 13:55-14:13 · 18s · 危机爆发'>1</div><div class='tl-seg q-white' style='left:82.28%;width:0.80%' title='#2 22:08-22:18 · 10s · 关系悬念'>2</div><div class='tl-seg q-extra' style='left:71.50%;width:0.93%' title='#3 19:14-19:29 · 15s · 冲突悬念'>3</div><div class='tl-seg q-extra' style='left:36.43%;width:0.99%' title='#4 09:48-10:04 · 16s · 结果悬念'>4</div><div class='tl-seg q-extra' style='left:2.85%;width:0.80%' title='#5 00:46-00:55 · 9s · 信息悬念'>5</div><div class='tl-seg q-extra' style='left:18.28%;width:0.80%' title='#6 04:55-05:05 · 10s · 冲突悬念'>6</div></div></div>
+          <div class="tl-row"><span class="tl-tag">benchmark</span><div class="tl-track"><div class='tl-seg q-green' style='left:51.36%;width:1.43%' title='case2-h1 命中优质 hook · 应保留（成功） · 13:49-14:12 · 命中'></div><div class='tl-seg q-red miss' style='left:61.96%;width:1.49%' title='case2-h2 命中 badcase · 应删除（误命中） · 16:40-17:04 · 未命中'></div><div class='tl-seg q-red miss' style='left:29.55%;width:0.80%' title='case2-h3 命中 badcase · 应删除（误命中） · 07:57-08:02 · 未命中'></div><div class='tl-seg q-white' style='left:82.28%;width:0.80%' title='case2-h4 命中白色 · 中性 · 22:08-22:11 · 命中'></div><div class='tl-seg q-red miss' style='left:2.73%;width:0.80%' title='case2-h5 命中 badcase · 应删除（误命中） · 00:44-00:49 · 未命中'></div><div class='tl-seg q-red miss' style='left:20.26%;width:0.80%' title='case2-h6 命中 badcase · 应删除（误命中） · 05:27-05:38 · 未命中'></div><div class='tl-seg q-white miss' style='left:99.13%;width:0.87%' title='case2-h7 命中白色 · 中性 · 26:40-26:54 · 未命中'></div></div></div>
+          <div class="tl-axis"><span>00:00</span><span>26:54</span></div>
+          <div class="legend"><span class='lg'><i class='dot q-green'></i>🟢 应保留</span><span class='lg'><i class='dot q-red'></i>🔴 应删除</span><span class='lg'><i class='dot q-yellow'></i>🟡 可选</span><span class='lg'><i class='dot q-white'></i>⬜ 中性</span><span class='lg'><i class='dot q-extra'></i>➕ 模型新增</span><span class="muted">（斜纹=benchmark 未被命中；hover 看时长与详情）</span></div>
+        </div>
+        <div class="cards">
+      <div class="hook-card q-green">
+        <div class="hc-head">
+          <span class="hc-idx">#1</span>
+          <span class="hc-time">13:55 → 14:13</span>
+          <span class='chip durok'>18s</span>
+          <span class="chip type">危机爆发</span>
+          <span class="hc-verdict">🟢 命中优质 hook · 应保留（成功）</span>
+          <span class='chip'>IoU 0.708</span><span class='chip'>↔ case2-h1</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>鼓龙风来袭，牛八一被困海上来不及返航，他能成功连人带船进入海岛空间躲过这场致命风暴吗？</div>
+        <div class="hc-desc">牛八一在礁石岛采鲍鱼时遭遇突发鼓龙风，来不及返航，他试图激活海岛空间，想要连人带船一起进去避险。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：牛八一出海采鲍鱼时遭遇突发鼓龙风，来不及返航，试图激活海岛空间连人带船避险；未展开：他能否成功进入空间躲过风暴。</div>
+      </div>
+      <div class="hook-card q-white">
+        <div class="hc-head">
+          <span class="hc-idx">#2</span>
+          <span class="hc-time">22:08 → 22:18</span>
+          <span class='chip durok'>10s</span>
+          <span class="chip type">关系悬念</span>
+          <span class="hc-verdict">⬜ 命中白色 · 中性</span>
+          <span class='chip'>IoU 0.3</span><span class='chip'>↔ case2-h4</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>牛八一当众提出想娶何真真，何叔和真真本人会同意这门亲事吗？</div>
+        <div class="hc-desc">牛八一按约定给何家分八成卖鱼钱，随后当众提出想娶何真真，真真的哥哥当即跳出来反对。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：牛八一按约定给何家分八成卖鱼钱，随后当众提出想娶何真真，真真的哥哥当即表示反对；未展开：何叔与真真是否同意这门亲事。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#3</span>
+          <span class="hc-time">19:14 → 19:29</span>
+          <span class='chip durok'>15s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>牛家想拿走牛八一卖鲍鱼赚的钱，被牛八一拒绝后，他们会善罢甘休吗？</div>
+        <div class="hc-desc">牛八一卖鲍鱼赚了三千多块，后妈马春花立刻上前，以“年轻人管不好钱”为由要帮他收着，牛八一直接拒绝，称自己和牛家没关系。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：牛八一卖鲍鱼赚了三千多块，后妈马春花上前要帮他管钱，被牛八一当场拒绝并表明和牛家无关；未展开：牛家接下来会怎么应对，这笔钱能不能保住。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#4</span>
+          <span class="hc-time">09:48 → 10:04</span>
+          <span class='chip durok'>16s</span>
+          <span class="chip type">结果悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>空间海水形成的发光水带要把牛八一带到哪里，真的能找到值钱的渔获吗？</div>
+        <div class="hc-desc">牛八一出海后倒出空间海水想引鱼，海水却形成发光水带自行向远处游去，完全没有引鱼的迹象，牛八一决定跟着水带走，赌它能带自己找到好东西。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：牛八一出海后倒空间海水引鱼，海水却形成发光水带自行游向远处，他决定跟着水带走一探究竟；未展开：水带会带他去哪里，能否找到值钱的渔获。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#5</span>
+          <span class="hc-time">00:46 → 00:55</span>
+          <span class='chip durok'>9s</span>
+          <span class="chip type">信息悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>牛八一刚按完断亲手印就被传送到陌生海岛，这到底是什么地方，他为什么会被传送到这里？</div>
+        <div class="hc-desc">牛八一刚按下断亲文书的手印，就瞬间被传送到一片陌生的热带海岛上，他清楚记得自己刚才还在村委会，完全不知道这是哪里。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：牛八一刚在村委会按下断亲手印，就瞬间出现在陌生的热带海岛上，他明确记得自己此前还在村委会；未展开：这片海岛是什么地方，他为什么会被传送过来。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#6</span>
+          <span class="hc-time">04:55 → 05:05</span>
+          <span class='chip durok'>10s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>牛八一断亲离开时放话让牛家别后悔，他到底有什么底气，接下来会怎么做？</div>
+        <div class="hc-desc">牛八一签完断亲文书，拿着老船的绳子离开牛家，走到门口时回头放下狠话，让牛家最好别后悔今天的选择，后妈马春花疑惑地问他啥意思。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：牛八一签完断亲文书，拿着分家得到的老船绳离开牛家，临走前放话让牛家别后悔今天的选择；未展开：牛八一有什么底牌，接下来会怎么证明自己。</div>
+      </div></div>
+      </div>
+    </details>
+    <details class="case-block" >
+      <summary>
+        <span class="cb-id">case3</span>
+        <span class="cb-name">一次伸手，一生情</span>
+        <span class="cb-stat">输出 7 · 🟢0/1 · 🔴1/3 · 🟡0 · ⬜1 · 时长中位 12.0s/max 25.0s</span>
+      </summary>
+      <div class="cb-body">
+        <div class='miss-note'>⚠ 漏保留绿色 1 条：case3-h1「总裁认定外卖员撞了父亲还劫财，下令备机赶去云城要」</div>
+        <div class="tl-wrap">
+          <div class="tl-row"><span class="tl-tag">模型 v1.5</span><div class="tl-track"><div class='tl-seg q-extra' style='left:62.79%;width:0.80%' title='#1 14:46-14:57 · 11s · 结果悬念'>1</div><div class='tl-seg q-extra' style='left:57.83%;width:0.85%' title='#2 13:36-13:48 · 12s · 冲突悬念'>2</div><div class='tl-seg q-red' style='left:80.51%;width:0.80%' title='#3 18:56-19:05 · 9s · 信息悬念'>3</div><div class='tl-seg q-white' style='left:27.64%;width:1.70%' title='#4 06:30-06:54 · 24s · 冲突悬念'>4</div><div class='tl-seg q-extra' style='left:0.28%;width:0.85%' title='#5 00:04-00:16 · 12s · 冲突悬念'>5</div><div class='tl-seg q-extra' style='left:87.24%;width:1.13%' title='#6 20:31-20:47 · 16s · 关系悬念'>6</div><div class='tl-seg q-extra' style='left:96.67%;width:1.77%' title='#7 22:44-23:09 · 25s · 结果悬念'>7</div></div></div>
+          <div class="tl-row"><span class="tl-tag">benchmark</span><div class="tl-track"><div class='tl-seg q-green miss' style='left:23.95%;width:0.80%' title='case3-h1 命中优质 hook · 应保留（成功） · 05:38-05:46 · 未命中'></div><div class='tl-seg q-white' style='left:28.70%;width:0.80%' title='case3-h2 命中白色 · 中性 · 06:45-06:55 · 命中'></div><div class='tl-seg q-white miss' style='left:39.55%;width:0.85%' title='case3-h3 命中白色 · 中性 · 09:18-09:30 · 未命中'></div><div class='tl-seg q-red miss' style='left:50.60%;width:0.80%' title='case3-h4 命中 badcase · 应删除（误命中） · 11:54-12:00 · 未命中'></div><div class='tl-seg q-white miss' style='left:58.68%;width:2.13%' title='case3-h5 命中白色 · 中性 · 13:48-14:18 · 未命中'></div><div class='tl-seg q-red miss' style='left:63.22%;width:0.92%' title='case3-h6 命中 badcase · 应删除（误命中） · 14:52-15:05 · 未命中'></div><div class='tl-seg q-white miss' style='left:65.84%;width:0.80%' title='case3-h7 命中白色 · 中性 · 15:29-15:40 · 未命中'></div><div class='tl-seg q-white miss' style='left:68.04%;width:3.90%' title='case3-h8 命中白色 · 中性 · 16:00-16:55 · 未命中'></div><div class='tl-seg q-red' style='left:80.51%;width:0.85%' title='case3-h9 命中 badcase · 应删除（误命中） · 18:56-19:08 · 命中'></div><div class='tl-seg q-white miss' style='left:99.57%;width:0.80%' title='case3-h10 命中白色 · 中性 · 23:25-23:31 · 未命中'></div></div></div>
+          <div class="tl-axis"><span>00:00</span><span>23:31</span></div>
+          <div class="legend"><span class='lg'><i class='dot q-green'></i>🟢 应保留</span><span class='lg'><i class='dot q-red'></i>🔴 应删除</span><span class='lg'><i class='dot q-yellow'></i>🟡 可选</span><span class='lg'><i class='dot q-white'></i>⬜ 中性</span><span class='lg'><i class='dot q-extra'></i>➕ 模型新增</span><span class="muted">（斜纹=benchmark 未被命中；hover 看时长与详情）</span></div>
+        </div>
+        <div class="cards">
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#1</span>
+          <span class="hc-time">14:46 → 14:57</span>
+          <span class='chip durok'>11s</span>
+          <span class="chip type">结果悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>法庭是否会判定张政撞人罪名成立？</div>
+        <div class="hc-desc">法官告知张政人证物证俱在，若他拿不出新的证据本庭就要宣判，张政犹豫后低头表示认罪。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：法官称证据充足即将宣判，张政无奈认罪；未展开：法庭最终会如何判决。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#2</span>
+          <span class="hc-time">13:36 → 13:48</span>
+          <span class='chip durok'>12s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>张政该如何反驳这份对他不利的照片证据？</div>
+        <div class="hc-desc">法庭上萧平安拿出老人昏迷前拍摄的外卖员背影照片，指控这是张政撞人后逃离现场的证据，张政见状震惊不已。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：原告方拿出老人拍的外卖员背影照，指控张政撞人逃逸；未展开：张政能否反驳这份证据自证清白。</div>
+      </div>
+      <div class="hook-card q-red">
+        <div class="hc-head">
+          <span class="hc-idx">#3</span>
+          <span class="hc-time">18:56 → 19:05</span>
+          <span class='chip durok'>9s</span>
+          <span class="chip type">信息悬念</span>
+          <span class="hc-verdict">🔴 命中 badcase · 应删除（误命中）</span>
+          <span class='chip'>IoU 0.75</span><span class='chip'>↔ case3-h9</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>医生的证词能否帮张政洗清撞人的冤屈？</div>
+        <div class="hc-desc">医生当庭反驳原告方的指控，称张政不是撞老人的凶手，而是老人的救命恩人，原告方闻言震惊。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：医生当庭证实张政是老人的救命恩人而非凶手；未展开：该证词能否帮张政翻案。</div>
+      </div>
+      <div class="hook-card q-white">
+        <div class="hc-head">
+          <span class="hc-idx">#4</span>
+          <span class="hc-time">06:30 → 06:54</span>
+          <span class='chip durwarn'>24s 偏长</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">⬜ 命中白色 · 中性</span>
+          <span class='chip'>IoU 0.36</span><span class='chip'>↔ case3-h2</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>被冤枉的张政会面临萧晴怎样的追责？</div>
+        <div class="hc-desc">老人的女儿萧晴带人来到医院，一口咬定张政撞了自己的父亲，称明早八点律师函就到，警告张政今晚是最后一次好好说话的机会。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：萧晴认定张政撞了父亲，放话将发律师函追责；未展开：张政接下来会面临怎样的麻烦。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#5</span>
+          <span class="hc-time">00:04 → 00:16</span>
+          <span class='chip durok'>12s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>张政只是扶了老人，为什么会沦为被告穿上囚服？</div>
+        <div class="hc-desc">法庭上法官质问被告张政，既然人不是他撞的为什么要扶，张政称自己一生对得起良心，唯独扶老人让他穿上了囚服。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：法官当庭质问张政，张政自认扶老人却穿囚服；未展开：张政扶老人沦为被告的真实经过。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#6</span>
+          <span class="hc-time">20:31 → 20:47</span>
+          <span class='chip durok'>16s</span>
+          <span class="chip type">关系悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>萧家子女会不会听从父亲的命令向张政赔罪？</div>
+        <div class="hc-desc">萧云国得知子女冤枉了自己的救命恩人张政，怒斥子女脸面比恩人的清白重要，宣布张政是自己的恩人，谁不记住就滚出萧家。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：萧云国怒斥子女冤枉恩人，放话不认恩人就逐出萧家；未展开：萧家子女是否会向张政赔罪。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#7</span>
+          <span class="hc-time">22:44 → 23:09</span>
+          <span class='chip durwarn'>25s 偏长</span>
+          <span class="chip type">结果悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>被房东赶出门的张政一家接下来该何去何从？</div>
+        <div class="hc-desc">张政一家洗清冤屈后回家，发现家门被贴了“惹祸精滚出本楼”的辱骂标语，房东以他们得罪了萧家、网上全是骂名为由要赶他们全家走。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：张政一家回家遭房东驱赶，无家可归；未展开：张政一家后续如何解决住处问题。</div>
+      </div></div>
+      </div>
+    </details>
+    <details class="case-block" >
+      <summary>
+        <span class="cb-id">case4</span>
+        <span class="cb-name">新娘当场换新郎</span>
+        <span class="cb-stat">输出 5 · 🟢0/0 · 🔴0/2 · 🟡0 · ⬜2 · 时长中位 16.0s/max 18.0s</span>
+      </summary>
+      <div class="cb-body">
+        
+        <div class="tl-wrap">
+          <div class="tl-row"><span class="tl-tag">模型 v1.5</span><div class="tl-track"><div class='tl-seg q-extra' style='left:57.40%;width:2.53%' title='#1 06:25-06:42 · 17s · 冲突悬念'>1</div><div class='tl-seg q-white' style='left:98.55%;width:1.45%' title='#2 11:01-11:11 · 10s · 冲突悬念'>2</div><div class='tl-seg q-white' style='left:8.80%;width:1.34%' title='#3 00:59-01:08 · 9s · 爽点兑现前'>3</div><div class='tl-seg q-extra' style='left:63.07%;width:2.68%' title='#4 07:03-07:21 · 18s · 冲突悬念'>4</div><div class='tl-seg q-extra' style='left:91.99%;width:2.39%' title='#5 10:17-10:33 · 16s · 关系悬念'>5</div></div></div>
+          <div class="tl-row"><span class="tl-tag">benchmark</span><div class="tl-track"><div class='tl-seg q-white' style='left:98.70%;width:1.19%' title='case4-h1 命中白色 · 中性 · 11:02-11:10 · 命中'></div><div class='tl-seg q-white' style='left:9.39%;width:0.80%' title='case4-h2 命中白色 · 中性 · 01:03-01:08 · 命中'></div><div class='tl-seg q-white miss' style='left:29.82%;width:0.80%' title='case4-h3 命中白色 · 中性 · 03:20-03:23 · 未命中'></div><div class='tl-seg q-white miss' style='left:42.49%;width:0.89%' title='case4-h4 命中白色 · 中性 · 04:45-04:51 · 未命中'></div><div class='tl-seg q-yellow miss' style='left:59.19%;width:1.04%' title='case4-h5 命中黄色 · 可选保留 · 06:37-06:44 · 未命中'></div><div class='tl-seg q-red miss' style='left:17.89%;width:1.04%' title='case4-h6 命中 badcase · 应删除（误命中） · 02:00-02:07 · 未命中'></div><div class='tl-seg q-white miss' style='left:77.98%;width:1.12%' title='case4-h7 命中白色 · 中性 · 08:43-08:50 · 未命中'></div><div class='tl-seg q-red miss' style='left:65.75%;width:0.82%' title='case4-h8 命中 badcase · 应删除（误命中） · 07:21-07:26 · 未命中'></div></div></div>
+          <div class="tl-axis"><span>00:00</span><span>11:11</span></div>
+          <div class="legend"><span class='lg'><i class='dot q-green'></i>🟢 应保留</span><span class='lg'><i class='dot q-red'></i>🔴 应删除</span><span class='lg'><i class='dot q-yellow'></i>🟡 可选</span><span class='lg'><i class='dot q-white'></i>⬜ 中性</span><span class='lg'><i class='dot q-extra'></i>➕ 模型新增</span><span class="muted">（斜纹=benchmark 未被命中；hover 看时长与详情）</span></div>
+        </div>
+        <div class="cards">
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#1</span>
+          <span class="hc-time">06:25 → 06:42</span>
+          <span class='chip durok'>17s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>沈念会把手交给顾砚，跟他离开吗？</div>
+        <div class="hc-desc">出阁吉时将至，沈念执意要按时出门，江离成却坚持要等伴娘苏婉婉补完妆；此时礼炮突然响起，沈念的青梅竹马顾砚乘婚车抵达，走到沈念面前伸手邀她一起去结婚。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：顾砚乘婚车抵达出阁现场，向沈念发出一起去结婚的邀请；未展开：沈念是否会接受邀请跟顾砚走。</div>
+      </div>
+      <div class="hook-card q-white">
+        <div class="hc-head">
+          <span class="hc-idx">#2</span>
+          <span class="hc-time">11:01 → 11:11</span>
+          <span class='chip durok'>10s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">⬜ 命中白色 · 中性</span>
+          <span class='chip'>IoU 0.825</span><span class='chip'>↔ case4-h1</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>江离成会对沈念说什么？沈念会跟他回去吗？</div>
+        <div class="hc-desc">江离成追到顾砚安排的婚礼现场，冲进化妆间见到了正在佩戴耳环的沈念，沈念示意化妆师先行离开。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：江离成冲进化妆间见到沈念，沈念支开化妆师准备与他独处；未展开：江离成会如何劝说，沈念是否会跟他回去。</div>
+      </div>
+      <div class="hook-card q-white">
+        <div class="hc-head">
+          <span class="hc-idx">#3</span>
+          <span class="hc-time">00:59 → 01:08</span>
+          <span class='chip durok'>9s</span>
+          <span class="chip type">爽点兑现前</span>
+          <span class="hc-verdict">⬜ 命中白色 · 中性</span>
+          <span class='chip'>IoU 0.556</span><span class='chip'>↔ case4-h2</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>沈念会发送这条抢亲消息吗？对方真的会来接她吗？</div>
+        <div class="hc-desc">婚礼当天，新郎江离成因偏帮伴娘苏婉婉补妆，执意耽误出阁吉时；沈念回忆起苏婉婉多年来多次插足自己与江离成的感情，愤而决定换新郎，编辑好了抢亲消息。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：沈念因江离成偏帮苏婉婉、且苏婉婉多年插足感情，决定换新郎并编辑好抢亲消息；未展开：沈念是否会发送消息，对方是否会前来抢亲。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#4</span>
+          <span class="hc-time">07:03 → 07:21</span>
+          <span class='chip durok'>18s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>江离成会如何回应顾砚的挑衅？双方冲突会如何升级？</div>
+        <div class="hc-desc">沈念跟顾砚离开后，江离成想追被沈父拦住，沈父宣布婚礼取消，不认他这个女婿；江离成不服辩解，顾砚站出来称两人还没领证，沈念不是他老婆。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：沈父宣布取消婚礼，顾砚当面称沈念不是江离成的老婆；未展开：江离成会如何回应，冲突会如何发展。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#5</span>
+          <span class="hc-time">10:17 → 10:33</span>
+          <span class='chip durok'>16s</span>
+          <span class="chip type">关系悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>沈念会认可顾砚的说法，愿意和他完成这场婚礼吗？</div>
+        <div class="hc-desc">沈念跟顾砚抵达婚礼现场，看到顾砚布置的两人学生时期的合照十分惊讶；顾砚表示自己要么不抢、要抢就抢得漂亮，强调沈念是自愿跟他走的，一切合法合规名正言顺。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：顾砚布置好婚礼现场，向沈念表明心意并强调两人结合的合理性；未展开：沈念是否愿意和顾砚完成这场婚礼。</div>
+      </div></div>
+      </div>
+    </details>
+    <details class="case-block" open>
+      <summary>
+        <span class="cb-id">case5</span>
+        <span class="cb-name">爷爷不请七遍不动筷</span>
+        <span class="cb-stat">输出 6 · 🟢0/0 · 🔴1/2 · 🟡0 · ⬜3 · 时长中位 11.8s/max 19.5s</span>
+      </summary>
+      <div class="cb-body">
+        
+        <div class="tl-wrap">
+          <div class="tl-row"><span class="tl-tag">模型 v1.5</span><div class="tl-track"><div class='tl-seg q-white' style='left:88.69%;width:1.96%' title='#1 14:42-15:02 · 20s · 冲突悬念'>1</div><div class='tl-seg q-extra' style='left:96.03%;width:1.26%' title='#2 15:55-16:08 · 12s · 冲突悬念'>2</div><div class='tl-seg q-extra' style='left:99.15%;width:0.85%' title='#3 16:26-16:34 · 8s · 冲突悬念'>3</div><div class='tl-seg q-white' style='left:66.87%;width:1.16%' title='#4 11:05-11:16 · 12s · 关系悬念'>4</div><div class='tl-seg q-white' style='left:59.93%;width:1.06%' title='#5 09:56-10:06 · 10s · 冲突悬念'>5</div><div class='tl-seg q-red' style='left:79.44%;width:1.21%' title='#6 13:10-13:22 · 12s · 冲突悬念'>6</div></div></div>
+          <div class="tl-row"><span class="tl-tag">benchmark</span><div class="tl-track"><div class='tl-seg q-red miss' style='left:1.21%;width:0.80%' title='case5-h1 命中 badcase · 应删除（误命中） · 00:12-00:17 · 未命中'></div><div class='tl-seg q-white' style='left:59.93%;width:1.11%' title='case5-h2 命中白色 · 中性 · 09:56-10:07 · 命中'></div><div class='tl-seg q-white' style='left:66.47%;width:1.21%' title='case5-h3 命中白色 · 中性 · 11:01-11:13 · 命中'></div><div class='tl-seg q-red' style='left:79.14%;width:1.11%' title='case5-h4 命中 badcase · 应删除（误命中） · 13:07-13:18 · 命中'></div><div class='tl-seg q-white miss' style='left:87.48%;width:1.21%' title='case5-h5 命中白色 · 中性 · 14:30-14:42 · 未命中'></div><div class='tl-seg q-white' style='left:88.49%;width:1.41%' title='case5-h6 命中白色 · 中性 · 14:40-14:54 · 命中'></div></div></div>
+          <div class="tl-axis"><span>00:00</span><span>16:34</span></div>
+          <div class="legend"><span class='lg'><i class='dot q-green'></i>🟢 应保留</span><span class='lg'><i class='dot q-red'></i>🔴 应删除</span><span class='lg'><i class='dot q-yellow'></i>🟡 可选</span><span class='lg'><i class='dot q-white'></i>⬜ 中性</span><span class='lg'><i class='dot q-extra'></i>➕ 模型新增</span><span class="muted">（斜纹=benchmark 未被命中；hover 看时长与详情）</span></div>
+        </div>
+        <div class="cards">
+      <div class="hook-card q-white">
+        <div class="hc-head">
+          <span class="hc-idx">#1</span>
+          <span class="hc-time">14:42 → 15:02</span>
+          <span class='chip durok'>20s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">⬜ 命中白色 · 中性</span>
+          <span class='chip'>IoU 0.558</span><span class='chip'>↔ case5-h6</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>爷爷会如何应对裴筠打破规矩、直接动筷的行为？</div>
+        <div class="hc-desc">裴筠打破沈家「请爷爷七遍才吃饭」的规矩，走到阳台只叫了爷爷一遍，便告知「桌上有菜，我们先吃了，吃不吃随您」，随后回到饭桌直接夹菜动筷，爷爷见状愤怒攥紧拳头。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：裴筠打破请七遍的规矩直接动筷吃饭，爷爷愤怒攥拳；未展开：爷爷对裴筠打破规矩的具体反应。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#2</span>
+          <span class="hc-time">15:55 → 16:08</span>
+          <span class='chip durok'>12s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>爷爷会如何回应裴筠对规矩来源的质问？</div>
+        <div class="hc-desc">爷爷以「长辈没动筷晚辈不能先吃」的规矩指责裴筠，裴筠反驳称父母没教过「儿媳妇嗓子咳哑还要请够七遍，长辈才肯赏脸过来吃饭」，并反问这规矩是老祖宗定的还是爷爷自己定的。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：裴筠反驳爷爷的规矩指责，并反问规矩的真实来源；未展开：爷爷对该质问的回应。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#3</span>
+          <span class="hc-time">16:26 → 16:34</span>
+          <span class='chip durok'>8s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>爷爷会如何回应裴筠对「尊重」的不同定义？</div>
+        <div class="hc-desc">裴筠向爷爷表明，长辈该有的尊重她不会少，但尊重不是让一个人每天站着、把同一句话喊七遍。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：裴筠向爷爷阐述自己对尊重的理解，正面反驳七遍规矩；未展开：爷爷对此的回应。</div>
+      </div>
+      <div class="hook-card q-white">
+        <div class="hc-head">
+          <span class="hc-idx">#4</span>
+          <span class="hc-time">11:05 → 11:16</span>
+          <span class='chip durok'>12s</span>
+          <span class="chip type">关系悬念</span>
+          <span class="hc-verdict">⬜ 命中白色 · 中性</span>
+          <span class='chip'>IoU 0.516</span><span class='chip'>↔ case5-h3</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>裴筠是否后悔和沈骁在一起？两人的感情会因沈家规矩受影响吗？</div>
+        <div class="hc-desc">返程车上，裴筠不满沈家吃饭要请七遍的规矩，向沈骁提出两人需要谈谈，沈骁紧张地接连询问裴筠是不是后悔了。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：裴筠因沈家规矩问题提出要和沈骁谈谈，沈骁询问她是否后悔；未展开：裴筠的真实想法与两人感情的走向。</div>
+      </div>
+      <div class="hook-card q-white">
+        <div class="hc-head">
+          <span class="hc-idx">#5</span>
+          <span class="hc-time">09:56 → 10:06</span>
+          <span class='chip durok'>10s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">⬜ 命中白色 · 中性</span>
+          <span class='chip'>IoU 0.955</span><span class='chip'>↔ case5-h2</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>爷爷听到裴筠说菜凉了的话会不会发作？</div>
+        <div class="hc-desc">裴筠第一次在沈家吃饭，先夸赞了阿姨的厨艺，随即话锋一转指出桌上的菜都已经从热菜放成了凉菜，爷爷表情瞬间沉了下来。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：裴筠在饭桌上指出菜已从热菜变凉菜，爷爷脸色沉下；未展开：爷爷是否会因此发作。</div>
+      </div>
+      <div class="hook-card q-red">
+        <div class="hc-head">
+          <span class="hc-idx">#6</span>
+          <span class="hc-time">13:10 → 13:22</span>
+          <span class='chip durok'>12s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">🔴 命中 badcase · 应删除（误命中）</span>
+          <span class='chip'>IoU 0.533</span><span class='chip'>↔ case5-h4</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>裴筠会如何回应爷爷提出的「懂沈家规矩」的要求？</div>
+        <div class="hc-desc">裴筠和沈骁领证后搬回沈家，爷爷得知后当场表示，领证了就算沈家人，沈家人就要懂沈家的规矩，沈骁瞬间紧张起来。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：爷爷向刚领证进门的裴筠提出要懂沈家规矩；未展开：裴筠对该要求的回应。</div>
+      </div></div>
+      </div>
+    </details>
+    <details class="case-block" >
+      <summary>
+        <span class="cb-id">case6</span>
+        <span class="cb-name">狐狸抬轿</span>
+        <span class="cb-stat">输出 5 · 🟢0/0 · 🔴0/2 · 🟡0 · ⬜3 · 时长中位 13.5s/max 17.0s</span>
+      </summary>
+      <div class="cb-body">
+        
+        <div class="tl-wrap">
+          <div class="tl-row"><span class="tl-tag">模型 v1.5</span><div class="tl-track"><div class='tl-seg q-white' style='left:46.53%;width:1.79%' title='#1 04:46-04:57 · 11s · 身份悬念'>1</div><div class='tl-seg q-white' style='left:76.62%;width:2.60%' title='#2 07:51-08:07 · 16s · 冲突悬念'>2</div><div class='tl-seg q-extra' style='left:62.96%;width:2.77%' title='#3 06:27-06:44 · 17s · 危机爆发'>3</div><div class='tl-seg q-white' style='left:98.26%;width:1.72%' title='#4 10:04-10:15 · 11s · 利益期待'>4</div><div class='tl-seg q-extra' style='left:8.95%;width:2.20%' title='#5 00:55-01:08 · 14s · 冲突悬念'>5</div></div></div>
+          <div class="tl-row"><span class="tl-tag">benchmark</span><div class="tl-track"><div class='tl-seg q-red miss' style='left:28.63%;width:4.56%' title='case6-h1 命中 badcase · 应删除（误命中） · 02:56-03:24 · 未命中'></div><div class='tl-seg q-white miss' style='left:33.35%;width:1.14%' title='case6-h2 命中白色 · 中性 · 03:25-03:32 · 未命中'></div><div class='tl-seg q-yellow miss' style='left:36.77%;width:4.39%' title='case6-h3 命中黄色 · 可选保留 · 03:46-04:13 · 未命中'></div><div class='tl-seg q-white' style='left:46.53%;width:2.44%' title='case6-h4 命中白色 · 中性 · 04:46-05:01 · 命中'></div><div class='tl-seg q-white miss' style='left:54.50%;width:1.63%' title='case6-h5 命中白色 · 中性 · 05:35-05:45 · 未命中'></div><div class='tl-seg q-white' style='left:76.46%;width:2.77%' title='case6-h6 命中白色 · 中性 · 07:50-08:07 · 命中'></div><div class='tl-seg q-red miss' style='left:94.68%;width:2.60%' title='case6-h7 命中 badcase · 应删除（误命中） · 09:42-09:58 · 未命中'></div><div class='tl-seg q-white' style='left:98.91%;width:1.09%' title='case6-h8 命中白色 · 中性 · 10:08-10:15 · 命中'></div></div></div>
+          <div class="tl-axis"><span>00:00</span><span>10:15</span></div>
+          <div class="legend"><span class='lg'><i class='dot q-green'></i>🟢 应保留</span><span class='lg'><i class='dot q-red'></i>🔴 应删除</span><span class='lg'><i class='dot q-yellow'></i>🟡 可选</span><span class='lg'><i class='dot q-white'></i>⬜ 中性</span><span class='lg'><i class='dot q-extra'></i>➕ 模型新增</span><span class="muted">（斜纹=benchmark 未被命中；hover 看时长与详情）</span></div>
+        </div>
+        <div class="cards">
+      <div class="hook-card q-white">
+        <div class="hc-head">
+          <span class="hc-idx">#1</span>
+          <span class="hc-time">04:46 → 04:57</span>
+          <span class='chip durok'>11s</span>
+          <span class="chip type">身份悬念</span>
+          <span class="hc-verdict">⬜ 命中白色 · 中性</span>
+          <span class='chip'>IoU 0.733</span><span class='chip'>↔ case6-h4</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>这两个抬轿的到底是什么身份？王老爹跟着他们上山会遭遇什么？</div>
+        <div class="hc-desc">怪树突然发动树根攻击，白衣抬轿人伸手抵挡时露出兽爪，王老爹震惊质问对方到底是什么东西，对方称到了山上再说清楚。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：白衣抬轿人抵挡攻击时露出兽爪，王老爹质问其身份；未展开：对方的真实身份是什么，上山后会发生什么。</div>
+      </div>
+      <div class="hook-card q-white">
+        <div class="hc-head">
+          <span class="hc-idx">#2</span>
+          <span class="hc-time">07:51 → 08:07</span>
+          <span class='chip durok'>16s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">⬜ 命中白色 · 中性</span>
+          <span class='chip'>IoU 0.941</span><span class='chip'>↔ case6-h6</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>黑狐执刑官会不会松口让王老爹救治老祖？老祖能不能撑到救治开始？</div>
+        <div class="hc-desc">王老爹正要伸手救治受伤的白狐老祖，黑狐执刑官突然窜出咬住他的手阻止，王老爹表示再拖下去老祖就没命了。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：黑狐执刑官咬住王老爹的手阻止他救治老祖，王老爹点明时间紧迫；未展开：黑狐是否会同意救治，老祖能否得救。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#3</span>
+          <span class="hc-time">06:27 → 06:44</span>
+          <span class='chip durok'>17s</span>
+          <span class="chip type">危机爆发</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>王老爹能不能通过洞府的气息考验？洞府深处到底藏着什么？</div>
+        <div class="hc-desc">王老爹进入窄洞时洞府突然收缩落石，他险些被夹伤，狼妖解释这是洞府在尝人的气息，歹人进来会被碾成肉泥。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：洞府突然收缩考验进入者，狼妖称歹人会被碾成肉泥；未展开：王老爹能否通过考验，洞府内有什么。</div>
+      </div>
+      <div class="hook-card q-white">
+        <div class="hc-head">
+          <span class="hc-idx">#4</span>
+          <span class="hc-time">10:04 → 10:15</span>
+          <span class='chip durok'>11s</span>
+          <span class="chip type">利益期待</span>
+          <span class="hc-verdict">⬜ 命中白色 · 中性</span>
+          <span class='chip'>IoU 0.617</span><span class='chip'>↔ case6-h8</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>狐族拿出这袋金子是要做什么？王老爹会不会接受这份报答？</div>
+        <div class="hc-desc">王老爹拒绝拿取狐族宝库中的珍宝，狐族却拿出一袋金元宝放在他面前，王老爹见状十分震惊。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：王老爹拒绝拿取宝库珍宝，狐族拿出一袋金元宝放在他面前，王老爹震惊；未展开：这袋金子的用途是什么，王老爹会不会接受。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#5</span>
+          <span class="hc-time">00:55 → 01:08</span>
+          <span class='chip durok'>14s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>瘫痪三年的石墩为何突然能行动？王老爹会不会因此改变主意答应上山？</div>
+        <div class="hc-desc">王老爹以儿子石墩瘫痪三年离不开人为由，拒绝了两人上山采药的请求，转头却发现瘫痪三年的石墩竟能下床走到门口，还拿起了门外的金子。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：王老爹拒绝了上山请求，却发现瘫痪三年的石墩竟能下床拿金子；未展开：石墩突然站起的原因是什么，王老爹会不会改变主意。</div>
+      </div></div>
+      </div>
+    </details>
+    <details class="case-block" open>
+      <summary>
+        <span class="cb-id">case7</span>
+        <span class="cb-name">别怪我心狠，谁让你动我三十万鱼苗</span>
+        <span class="cb-stat">输出 6 · 🟢0/0 · 🔴0/1 · 🟡0 · ⬜4 · 时长中位 15.8s/max 18.5s</span>
+      </summary>
+      <div class="cb-body">
+        
+        <div class="tl-wrap">
+          <div class="tl-row"><span class="tl-tag">模型 v1.5</span><div class="tl-track"><div class='tl-seg q-white' style='left:53.65%;width:3.05%' title='#1 04:50-05:06 · 16s · 结果悬念'>1</div><div class='tl-seg q-extra' style='left:82.33%;width:3.42%' title='#2 07:25-07:44 · 18s · 冲突悬念'>2</div><div class='tl-seg q-white' style='left:92.51%;width:2.59%' title='#3 08:20-08:34 · 14s · 冲突悬念'>3</div><div class='tl-seg q-extra' style='left:97.13%;width:2.87%' title='#4 08:45-09:00 · 16s · 结果悬念'>4</div><div class='tl-seg q-white' style='left:15.17%;width:2.96%' title='#5 01:22-01:38 · 16s · 冲突悬念'>5</div><div class='tl-seg q-white' style='left:20.72%;width:1.57%' title='#6 01:52-02:00 · 8s · 结果悬念'>6</div></div></div>
+          <div class="tl-row"><span class="tl-tag">benchmark</span><div class="tl-track"><div class='tl-seg q-white' style='left:53.65%;width:2.96%' title='case7-h1 命中白色 · 中性 · 04:50-05:06 · 命中'></div><div class='tl-seg q-white miss' style='left:80.85%;width:0.80%' title='case7-h2 命中白色 · 中性 · 07:17-07:21 · 未命中'></div><div class='tl-seg q-red miss' style='left:8.70%;width:1.30%' title='case7-h3 命中 badcase · 应删除（误命中） · 00:47-00:54 · 未命中'></div><div class='tl-seg q-white' style='left:93.06%;width:2.22%' title='case7-h4 命中白色 · 中性 · 08:23-08:35 · 命中'></div><div class='tl-seg q-white miss' style='left:32.01%;width:4.44%' title='case7-h5 命中白色 · 中性 · 02:53-03:17 · 未命中'></div><div class='tl-seg q-white' style='left:14.80%;width:3.33%' title='case7-h6 命中白色 · 中性 · 01:20-01:38 · 命中'></div><div class='tl-seg q-white' style='left:18.87%;width:3.33%' title='case7-h7 命中白色 · 中性 · 01:42-02:00 · 命中'></div><div class='tl-seg q-white miss' style='left:61.61%;width:3.89%' title='case7-h8 命中白色 · 中性 · 05:33-05:54 · 未命中'></div></div></div>
+          <div class="tl-axis"><span>00:00</span><span>09:00</span></div>
+          <div class="legend"><span class='lg'><i class='dot q-green'></i>🟢 应保留</span><span class='lg'><i class='dot q-red'></i>🔴 应删除</span><span class='lg'><i class='dot q-yellow'></i>🟡 可选</span><span class='lg'><i class='dot q-white'></i>⬜ 中性</span><span class='lg'><i class='dot q-extra'></i>➕ 模型新增</span><span class="muted">（斜纹=benchmark 未被命中；hover 看时长与详情）</span></div>
+        </div>
+        <div class="cards">
+      <div class="hook-card q-white">
+        <div class="hc-head">
+          <span class="hc-idx">#1</span>
+          <span class="hc-time">04:50 → 05:06</span>
+          <span class='chip durok'>16s</span>
+          <span class="chip type">结果悬念</span>
+          <span class="hc-verdict">⬜ 命中白色 · 中性</span>
+          <span class='chip'>IoU 0.97</span><span class='chip'>↔ case7-h1</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>刘翠花是否会真的把除草剂倒进鱼塘毁掉整塘鱼？</div>
+        <div class="hc-desc">刘翠花伙同刘大壮、王二狗偷捞大量锦鲤后仍不满足，拿出除草剂准备倒进鱼塘毒死所有鱼，刘大壮担心惹出大麻烦出言劝阻，刘翠花执意要动手。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：刘翠花一伙偷鱼后拿出除草剂准备毁塘，大壮劝阻无效；未展开：刘翠花是否会真的倒入除草剂。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#2</span>
+          <span class="hc-time">07:25 → 07:44</span>
+          <span class='chip durok'>18s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>村长会不会同意公放监控？刘翠花的罪行会不会被当众揭穿？</div>
+        <div class="hc-desc">整塘锦鲤被毒死引发村民围观，刘翠花挤到前面幸灾乐祸称是林远的报应，林远拿出手机表示昨晚剪围栏、偷鱼、投药的全过程都被红外监控拍清，提出借村委会大屏公放录像。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：鱼塘被毁，林远称有完整监控并提出公放给全村看；未展开：监控是否会被公放、刘翠花的罪行是否会被当众坐实。</div>
+      </div>
+      <div class="hook-card q-white">
+        <div class="hc-head">
+          <span class="hc-idx">#3</span>
+          <span class="hc-time">08:20 → 08:34</span>
+          <span class='chip durok'>14s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">⬜ 命中白色 · 中性</span>
+          <span class='chip'>IoU 0.733</span><span class='chip'>↔ case7-h4</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>面对警方出示的完整物证，刘翠花是否还会继续抵赖？</div>
+        <div class="hc-desc">村委会公放监控后村民认出刘翠花三人，刘翠花狡辩视频是林远伪造的，警察拿出包含工具断面、脚印、面部特征的物证材料，质问她是否还要否认。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：刘翠花狡辩监控是伪造的，警方出示完整物证并当庭质问；未展开：刘翠花是否会承认自己的罪行。</div>
+      </div>
+      <div class="hook-card q-extra">
+        <div class="hc-head">
+          <span class="hc-idx">#4</span>
+          <span class="hc-time">08:45 → 09:00</span>
+          <span class='chip durok'>16s</span>
+          <span class="chip type">结果悬念</span>
+          <span class="hc-verdict">➕ benchmark 未覆盖 · 模型自主新增</span>
+          <span class='chip muted'>无 benchmark 对应</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>警方是否会当场对刘翠花及其同伙采取强制措施？</div>
+        <div class="hc-desc">刘翠花跪地求饶提出赔500元私了，林远指出她毁掉的是价值30万的鱼苗而非500元，警方拿出采购记录和第三方价值证明，证实案件已涉嫌严重刑事犯罪。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：刘翠花求私了被拒，警方证实案件涉嫌严重刑事犯罪；未展开：警方是否会当场控制刘翠花及其同伙。</div>
+      </div>
+      <div class="hook-card q-white">
+        <div class="hc-head">
+          <span class="hc-idx">#5</span>
+          <span class="hc-time">01:22 → 01:38</span>
+          <span class='chip durok'>16s</span>
+          <span class="chip type">冲突悬念</span>
+          <span class="hc-verdict">⬜ 命中白色 · 中性</span>
+          <span class='chip'>IoU 0.889</span><span class='chip'>↔ case7-h6</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>刘翠花面对林远录像留证会作何反应？</div>
+        <div class="hc-desc">刘翠花带孙子偷捞锦鲤被林远当场抓获，林远点明两条鱼价值5000元、未经允许捞鱼属于盗窃，刘翠花坐地撒泼反咬林远欺负人，林远掏出手机开启录像留证。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：刘翠花偷鱼被抓后撒泼反咬，林远开启录像留存盗窃证据；未展开：刘翠花会如何应对录像留证。</div>
+      </div>
+      <div class="hook-card q-white">
+        <div class="hc-head">
+          <span class="hc-idx">#6</span>
+          <span class="hc-time">01:52 → 02:00</span>
+          <span class='chip durok'>8s</span>
+          <span class="chip type">结果悬念</span>
+          <span class="hc-verdict">⬜ 命中白色 · 中性</span>
+          <span class='chip'>IoU 0.432</span><span class='chip'>↔ case7-h7</span>
+        </div>
+        <div class="hc-q"><b>未解问题：</b>林远接下来会采取什么行动应对刘翠花的偷鱼挑衅？</div>
+        <div class="hc-desc">刘翠花被抓后故意踢翻鱼桶放走锦鲤，带着孙子离开，林远将鱼放回水中，称已经给过对方机会，既然不知好歹就别怪自己心狠。</div>
+        <div class="hc-reason"><b>截点理由：</b>已成立：刘翠花偷鱼并故意放走锦鲤挑衅，林远放话将采取强硬措施；未展开：林远接下来会采取什么行动。</div>
+      </div></div>
+      </div>
+    </details>
+    <p class="note" style="margin-top:16px">🟢 越多越好、🔴 越少越好；➕ 是 benchmark 未覆盖、模型自主新增的候选，不计分。时长标签让“片段是否可直接用于剪辑”一目了然。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">5</span>迭代方式：自动化闭环（与前几版一致）</h2>
+    <div class="flow">
+      <span class="step">① Turbo + 当前 prompt 提取 hook</span><span class="arrow">→</span>
+      <span class="step">② 与 benchmark 对比，挑出 badcase</span><span class="arrow">→</span>
+      <span class="step">③ ffmpeg 剪出 badcase 片段</span><span class="arrow">→</span>
+      <span class="step">④ Seed 2.1 Pro 视频理解逐条诊断</span><span class="arrow">→</span>
+      <span class="step">⑤ 反推规则，写入新 prompt</span>
+    </div>
+    <p class="lead" style="margin-top:14px">本轮做了两件事：① 用 v1/v1.4 的时长分布做量化对照，反推出时长门槛 D1；② 对加时长约束后暴露的 6 个红色 + 1 个绿色 badcase 剪片段送 Seed 2.1 Pro 视频理解（判定与人工研判 100% 一致），反推出 E8 与 3 条跨类型通杀、并强化 P1。规则清单（D1 / E8 / 通杀为本版新增，已高亮）：</p>
+    <table>
+      <thead><tr><th>规则</th><th>来源</th><th>命中即删除 / 保留 / 约束的情形</th></tr></thead>
+      <tbody><tr class='hl'><td class='tag'>D1</td><td class='muted'>v1.5 新增</td><td>片段时长门槛：目标 8-20s、硬上限 30s；过长只收紧 start_time 或拆分，不延后 end_time</td></tr><tr class=''><td class='tag'>E1</td><td class='muted'>v2 迭代</td><td>高潮后失利方发怒/部署求援的过渡节点（停在布置任务/拨电话/下指令）</td></tr><tr class=''><td class='tag'>E2</td><td class='muted'>v2 迭代</td><td>“行动后等待结果”停在无征兆的空等初期（引鱼/下药/布陷阱…）</td></tr><tr class=''><td class='tag'>E3</td><td class='muted'>v2→v1.3 强化</td><td>真相/爆料已说全 + 对方第一波即时反应已现，后续只剩补充语句/情绪宣泄</td></tr><tr class=''><td class='tag'>E4</td><td class='muted'>v2 迭代</td><td>仅主角“察觉异常→戒备”的心理活动收尾，外部冲突尚未爆发</td></tr><tr class=''><td class='tag'>E5</td><td class='muted'>v1.3 迭代</td><td>无实质内容的空洞宣告/铺垫台词（“进门要守规矩”“你给我等着”）</td></tr><tr class=''><td class='tag'>E6</td><td class='muted'>v1.3 迭代</td><td>对已发生事件的评价/感慨类过渡对白；且严禁脑补片段外后续</td></tr><tr class=''><td class='tag'>E7</td><td class='muted'>v1.3 迭代</td><td>指控/揭穿后仅呈现另一方“本能变脸情绪反应”，尚无具体反驳/反制/升级</td></tr><tr class='hl'><td class='tag'>E8</td><td class='muted'>v1.5 新增</td><td>日常事务协商弱悬念（借船/分账/请托等，结果凭常理高概率可预判）→ 删</td></tr><tr class='hl'><td class='tag'>通杀</td><td class='muted'>v1.5 新增</td><td>把 E3/E4/E5 本质扩展到所有 hook_type：核心爆点已释放 / 仅内心怀疑戒备 / 笼统威压无具体冲突</td></tr><tr class=''><td class='tag'>P1</td><td class='muted'>保护规则(v1.5强化)</td><td>主角因受损事件锁定追责对象+下令启动行动+真相未揭晓 → 必须保留（防误删绿色）</td></tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="n">6</span>提示词改动：v1 → v1.5</h2>
+    <p class="lead">v1 是“松散召回 + 双输出 + 无验证/无排除/无时长约束”；v1.5 是“hook-only + 三力 + 验证链 + E1-E8 + 跨类型通杀 + P1 + 时长门槛 D1”。</p>
+    <table>
+      <thead><tr><th>维度</th><th>v1（原始）</th><th>v1.5（本版）</th></tr></thead>
+      <tbody><tr><td class='dim'>片段时长</td><td class='v1cell'>无约束，但召回较散、时长自然偏短（中位≈11s）</td><td class='v14cell'>新增门槛 D1：目标 8-20s、硬上限 30s；过长优先收紧起点或拆分为多条；实测中位 12.5s、max 25.0s</td></tr><tr><td class='dim'>输出范围</td><td class='v1cell'>同时产出 highlights + hook</td><td class='v14cell'>只产出 hook（highlights 恒为 []），算力集中，杜绝“泛看点召回”误保留</td></tr><tr><td class='dim'>hook 定义</td><td class='v1cell'>“关键前置事件已成立、答案未展开”的较松描述</td><td class='v14cell'>收紧为：已发生事实 + 具体未解问题 + 观众未知 + 答案未展开，且“非高度可预期”</td></tr><tr><td class='dim'>三力门槛</td><td class='v1cell'>无</td><td class='v14cell'>未解问题 + 情绪拉力 + 下一步期待，缺一即删</td></tr><tr><td class='dim'>验证链</td><td class='v1cell'>三点自检，无强制字段链</td><td class='v14cell'>established_fact → fact_evidence → open_question → 观众未知 → After End Check → 剧情驱动性</td></tr><tr><td class='dim'>专项排除</td><td class='v1cell'>无</td><td class='v14cell'>E1-E8 八条实证排除规则 + 3 条跨类型通杀</td></tr><tr><td class='dim'>保护规则</td><td class='v1cell'>无</td><td class='v14cell'>P1：主角锁定追责对象+下令启动行动+真相未揭晓 → 必须保留</td></tr><tr><td class='dim'>截点/收紧</td><td class='v1cell'>答案未泄露 &gt; 画面稳定（较笼统）</td><td class='v14cell'>Step 6 给出具体截点；Step 6.5 只动 start_time 或拆分，禁止延后 end_time 压时长</td></tr><tr><td class='dim'>一段多点</td><td class='v1cell'>无限制，易把多个事件塞进一个长片段</td><td class='v14cell'>明确禁止“一段包多点”；多 open_question 必须拆成多条独立短 hook</td></tr></tbody>
+    </table>
+    <p style="margin-top:16px">v1.5 的 hook 流程：</p>
+    <div class="flow">
+      <span class="step">定义/三力门槛</span><span class="arrow">→</span>
+      <span class="step">时长门槛 D1</span><span class="arrow">→</span>
+      <span class="step">候选生成</span><span class="arrow">→</span>
+      <span class="step">验证链</span><span class="arrow">→</span>
+      <span class="step">排除 E1-E8 + 通杀</span><span class="arrow">→</span>
+      <span class="step">截点</span><span class="arrow">→</span>
+      <span class="step">时长复核·收紧/拆分</span><span class="arrow">→</span>
+      <span class="step">去重</span><span class="arrow">→</span>
+      <span class="step">排序</span>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">7</span>最终版提示词 v1.5（完整稿）</h2>
+    <p class="lead">以下为 <code>prompts/v1.5.txt</code> 全文，可直接作为 Seed 2.1 Turbo 的 system prompt 使用。</p>
+    <pre># 漫剧/短剧 Hook 提取 Prompt v1.5（在 v1.4 基础上加入「片段时长约束」+ 一轮 Pro 诊断强化排除）
+#
+# ============================================================
+# 迭代脉络：v1.4（hook-only + 三力 + E1-E7 + P1）→（本版 v1.5）新增时长控制 + E8/通杀强化。
+#
+# 本版分两步产出：
+# 【第一步·时长约束】v1.4 实测发现一个直接影响「自动剪辑」落地、且导致评估失真的系统性问题：
+#   v1.4 没有对单条 hook 的片段时长做任何约束，导致片段普遍偏长——
+#   全量统计：v1 中位 11.0s / p90 27.0s / max 55.0s；
+#             v1.4 中位 25.5s / p90 74.5s / max 120.5s（case7 仅 3 段，全部 80-120s；case5 出现 114.5s）。
+#   后果有二：
+#   (a) 业务上：过长片段不符合「短视频结尾钩子 / 自动剪辑」的实际使用场景，无法直接用于成片；
+#   (b) 评估上：v1.4 对红色 badcase 的「规避」有相当一部分是假象——
+#       它并非真正跳过了那个坏截点，而是用一个超长片段把红色片段整体包了进去，
+#       导致与 benchmark 的 IoU 错配、红色误命中被低估（v1.4 红误命中 1/15 是虚高）。
+#
+# 【第二步·Pro 诊断强化】加时长约束后片段压回正常长度（中位 12.0s / max 18.0s / 超30s=0），
+#   被超长片段掩盖的红色 badcase 真实暴露（红误命中回到 6/15、综合分 55.0，与同源 v1.3 持平）。
+#   对这 6 个红色 + 1 个绿色漏保留剪片段送 Seed 2.1 Pro 视频理解，判定与人工研判 100% 一致，据此：
+#     - 新增 E8：日常事务协商类弱悬念（借船分账等，结果高概率可预判）→ 删；
+#     - 补充三条「跨类型通杀」：把 E3/E4/E5 的本质从特定 hook_type 扩展到所有类型
+#       （核心爆点已释放 / 仅内心怀疑戒备 / 笼统威压无具体冲突）；
+#     - 强化 P1：主角因受损事件做出重大行动决策、行动未展开时必须保留（防误删绿色）。
+#
+# 关键决定：沿用 v1.4 全部语义规则不放松，叠加时长门槛 D1（目标 8-20s、硬上限 30s，
+#   过长只收紧 start_time 或拆分、绝不延后 end_time），再叠加 E8 与通杀强化。
+#   hook 流程骨架：定义→三力→时长门槛→候选→验证链→hook_type→排除(E1-E8)→截点→时长复核→去重→排序。
+# ============================================================
+
+## 1. 角色定义
+
+你是专业的漫剧/短剧内容分析师。本任务只识别一类素材：
+
+- `hook`：用于短视频结尾或追更引导的悬念钩子——已发生的关键事实 + 由其直接产生的具体未解决问题，且答案对观众仍未知、未展开的“结尾停顿点”。
+
+仅依据实际视频内容判断，禁止虚构剧情、人物状态、时间或分集信息；**严禁把片段中未出现的后续剧情作为判定依据**。
+
+质量优先：不为满足数量输出低质量片段；不输出重复、平淡、无关或不符合规则的片段；合格候选不足时允许少于目标数量，绝不降低标准凑数。宁可少，不可滥。
+
+hook 是要直接拿去剪成短视频结尾的片段，因此每条 hook 除“语义成立”外，还必须“时长可用”——见 Step 0.3。
+
+只输出合法 JSON，不输出 Markdown、解释或其他文字。
+
+---
+
+## 2. 时间与分集规则
+
+### 2.1 时间规则
+
+- 所有时间字段统一使用毫秒，类型为 number。
+- 必须满足：`0 &lt;= start_time &lt; end_time &lt;= 视频实际时长`。
+- 不得输出秒、分钟、HH:MM:SS、字符串时间或 `peak_time`。
+- `end_time` 必须与 `description` 一致，并停在自然、清晰的截点。
+- 时间戳需对齐到实际可见的关键帧，不得输出无画面支撑的臆测精度。
+- **单条 hook 的片段时长 `end_time - start_time` 必须满足 Step 0.3 的时长门槛。**
+
+### 2.2 分集规则
+
+若提供 `episode_metadata`，设集数为 `N`：
+
+- hook 按 `end_time` 所在集归属，目标数量为 `ceil(0.5N)` 到 `N` 个。
+- `start_time` 可早于 `end_time` 所属集以包含必要前情；`episode_index` 仅表示 `end_time` 所属原剧集。
+- 从 `start_time` 到 `end_time` 必须包含理解该 Hook 所需的前置事实、已成立事件和 `open_question`，**但不得为“交代更多前情”而无限拉长；只保留必需的最小前情（见 Step 0.3 / Step 6.5）**。
+
+若未提供 `episode_metadata`：按整段视频识别，不输出 `episode_index`，hook 目标数量为 5-10 个。
+
+只有通过全部规则的候选才计入数量。合格候选不足时输出实际数量。
+
+---
+
+## 3. highlights（本任务不产出）
+
+本任务只交付 hook。输出中 `highlights` 字段恒为空数组 `[]`，不做任何识别。
+
+---
+
+## 4. 结尾 hook
+
+hook 流程：定义 → 候选生成 → 验证链 → hook_type → 排除规则 → 截点规则 → **时长复核** → 去重 → 排序。
+
+### Step 0：三力硬门槛（最高优先级，输出前逐条自检）
+
+&gt; 有效 hook = 未解问题 + 情绪拉力 + 下一步期待。
+&gt; Badcase = 没有未解决的问题 + 没有情绪拉力 + 没有下一步期待。
+
+每个候选输出前必须同时具备三力，缺一即删除：
+
+- **未解问题**：存在具体、非空、由已发生剧情直接产生的 `open_question`；
+- **情绪拉力**：截点承载明确的紧张/期待/悬置情绪，而非平淡收束或可预期的过渡；
+- **下一步期待**：观众能明确说出“下一秒想知道/想看到什么”，且该期待**并非高度可预期**（如“被揭穿者接下来大概率会否认/撒泼”这种人人能猜到的走向，不算有效期待）。
+
+同时逐条排查以下 6 类通用 badcase，命中任一即删除：
+
+1. 事情已说完：关键信息/事件已完整交代，观众没有还想知道的东西。
+2. 不够吸引：事情虽未结束，但悬念弱、无情绪拉力、不足以驱动追看。
+3. 停在过渡位：`end_time` 落在普通对白、日常过场、转场或非关键节点。
+4. 看不懂：脱离上下文观众不知道发生了什么，结束了也不知道该期待什么。
+5. 高潮已过：最精彩的反转/爽点/揭露已经演完，才停下来（截晚）。
+6. 伪悬念：表面像有问题，本质是一个很平淡、无后续推进价值的点。
+
+### Step 0.3：时长门槛 D1（自动剪辑硬约束，与三力同级，输出前逐条自检）
+
+hook 片段要直接用于短视频结尾成片，过长片段既不可用、又会在评估中用“大片段包住坏截点”造成假性规避。因此：
+
+- **目标时长：`8s ≤ (end_time - start_time) ≤ 20s`。** 这是绝大多数 hook 应落入的区间（对齐 v1 真实分布：中位约 11s）。
+- **硬上限：30s。** 超过 30s 的片段一律不得直接输出，必须先按 Step 6.5 收紧或拆分。
+- **下限：一般不短于 4s**（除非前置事实极简、4s 内已能让 open_question 成立）。
+- 允许比 v1 略长（例如信息密度高、需要多一两句前置台词的冲突/信息类 hook 可到 15-20s），但**不允许出现 40s、80s、120s 这类离谱长度**。
+
+判断顺序：先按语义规则确定正确的 `end_time`（结尾停顿点），再向前找**刚好够用**的 `start_time`。若初步区间 &gt; 20s，进入 Step 6.5 处理；&gt; 30s 属硬违规，必须处理后才能输出。
+
+### Step 0.5：专项排除清单 E1-E8（命中任一即删除，优先级等同 Step 0）
+
+以下是实测中最容易被误判为有效 hook 的“伪钩子”。E1-E4 来自 v2 迭代，E5-E7 来自 v1.3 迭代，E8 与「跨类型通用强化」来自 v1.5 对本版 badcase 的 Seed 2.1 Pro 片段诊断：
+
+- **E1 · 高潮后的失利方反应/部署过渡**：核心冲突/爽点已在片段前段完整完成后，后续仅为失利方（多为反派）事后发怒宣泄、商议对策、安排手下求援，且 `end_time` 落在“布置任务/拨打电话/下达指令”这类内部部署的非即时冲突节点——即使撂狠话或提报复计划，也删除。（与 Step 1 的 P1 相反，勿混淆）
+
+- **E2 · 无征兆的“行动后等待结果”初期铺垫**：hook 属“主角实施某行动、等待其结果”类且结果需时间触发（引鱼、下药、布陷阱、播种、等消息等）时，禁止把 `end_time` 选在刚做完动作、仍处等待初期、画面只有主角祈祷/期待/念叨、无任何结果将至征兆的铺垫段。须等“结果即将揭晓的明确信号”出现才成立。例外：行动本身具即时危险/即时结果（拉炸弹、推重物、甩武器）不受此限。
+
+- **E3 · 真相/爆料已说全 + 对方第一波即时反应已现的收尾**：信息悬念/真相揭露/“角色突然出面揭露真相或自认责任”类，停点必须在“核心答案/真相/爆料尚未被完整说出”的临界点，或“核心结果刚出口、当事人即时反应镜头尚未给出”的瞬间。若核心内容已被角色完整表述完毕、且对立方/相关人物的第一波震惊/反驳/即时反应镜头已经呈现，则后续即便还有一句“没说完的补充语句”或角色的情绪宣泄/重复表态，也属高潮已过，删除。
+
+- **E4 · “察觉异常→戒备”的心理活动收尾（危机前铺垫）**：结尾落在主角完成“观察异常→推导→判断‘对方不对劲/有鬼’→握紧武器等戒备”这条心理活动闭环、且尚未出现即时外部冲突/反派回应/更强异常现象时——属危机前铺垫，删除。要成立须截在“异常/冲突即将当场爆发”。
+
+- **E5 · 无实质内容的空洞宣告/铺垫台词**：结尾仅停在**只表态度、无具体实质内容**的宣告性/铺垫性台词（如“进了门就要守规矩”“你给我等着”“我有话要说”“今天有你好看”），且没有配套的具体冲突动作、明确的利害指向或具体事件信息时——属铺垫，删除。只有当这类表态**之后已跟进**具体冲突内容/明确事件信息/利害触发动作、并停在回应或后果揭晓前，才可成立。
+
+- **E6 · 对已发生事件的评价/感慨类过渡对白**：结尾落在角色对**已经发生**的事件发表评价、感慨、总结类普通对白，剧情处于平缓推进的铺垫过渡、尚未抛出新的冲突/决定/意外/明确待揭晓核心信息，仅有“剧情尚未结束”的泛化感知时——删除。（并再次强调：严禁把片段外未出现的后续脑补成 hook 依据。）
+
+- **E7 · 指控/揭穿后仅“本能变脸情绪反应”**：结尾落在“一方完成对另一方的指控、揭穿、负面判定后，仅呈现另一方震惊、错愕、愤怒等**本能变脸情绪反应**，尚未出现任何具体的反驳、反制、矛盾升级或反转内容”——这是冲突正式交锋前的铺垫过渡镜头，且后续走向高度可预期（多半是否认/撒泼），悬念拉力不足，删除。要成立须截在“具体反制/升级/反转即将发生”的信号点，而非“刚变脸”。
+
+- **E8 · 日常事务协商的弱悬念（v1.5 新增，来自 Pro 诊断）**：结尾停在普通生活事务的协商/请求/合作分账类日常对白（借船借物、普通买卖分成、日常请托等），仅存在“对方是否答应”这类**凭常理即可高概率预判结果、且不涉及强冲突/危机/反转/重大利益抉择/命运转折**的弱悬念时——即使一方开出优厚条件、对方露出震惊或迟疑表情，也删除。要成立须该请求本身绑定了强利害冲突或会触发重大剧情转折（而非“借不借得到”这种低风险问题）。
+
+**跨类型通用强化（v1.5 据 Pro 诊断补充，对所有 hook_type 生效，不限原 E 条绑定的类型）**：
+- **“核心爆点已完整释放”通杀**：无论 `hook_type` 为何（冲突/信息/爽点余波/关系…），只要片段内**核心反转/真相/结论已被完整说出**、且在场相关人物的**第一波即时反应镜头已经给出**，即属高潮已过（E3 的本质），一律删除；有效停顿点必须落在“核心内容尚未说全 / 即时反应尚未给出”的临界瞬间。
+- **“仅内心怀疑戒备、外部冲突未触发”通杀**：无论标为 `危机爆发` 还是 `冲突/身份悬念`，只要结尾仅停在主角“主观觉得不对劲→握武器戒备”的心理层面、**外部异常信号/敌对动作/危险实体尚未当场显露**，即属危机前铺垫（E4 的本质），删除。
+- **“笼统威压/宣告、无具体冲突支撑”通杀**：无论标为 `冲突悬念` 还是其他，只要结尾仅是“进门要守规矩/这事没完”这类**只表态度、无具体刁难要求或实质矛盾动作**的开场白，即属空洞铺垫（E5 的本质），删除。
+
+### Step 1：定义与强度门槛
+
+`hook` 必须同时满足：关键事件已成立；观众存在明确未知问题；答案/回应/后果尚未展开。
+
+核心判断：如果视频停在这个 `end_time`，观众是否会对后续剧情产生**明确且非高度可预期**的期待？
+
+强度门槛：仅“信息没说完”不足以成 Hook。`open_question` 必须具体、非空，由当前已发生剧情直接产生，且与人物目标、剧情冲突、利益变化、身份认知、关系变化或结果发展直接相关。“后面会发生什么”“事情会不会更复杂”等泛泛问题不得作为 Hook。
+
+以下通常不构成有效 Hook（除非该信息会改变观众对人物目标/冲突/选择/剧情方向的理解，或本身就是当前核心秘密）：单纯想知道物品价值 / 单纯想知道人物为什么惊讶 / 单纯想知道设定有多强 / 单纯想知道隐藏信息是什么。
+
+**P1 · 保护规则（防止误删优质 hook）**：当片段结尾停在——主角因**明确的**利益/情感受损事件（亲人受伤、财产被夺、被背叛等）**锁定了追责/复仇对象**，情绪饱满地放出复仇/追责狠话并**下达启动关键行动的指令**（备机/备车赶往事发地、扬言让对方付出代价等），且**关键行动尚未展开、事件真相与结果均未揭晓**——属具备强情绪拉力与明确悬念的**有效 hook，必须保留**，不得当成“单纯情绪宣泄”“失利方部署过渡（E1）”或“空洞宣告（E5）”而删除。
+判别要点：P1 主体是**主导剧情的主角、行动尚未开始、真相未明、有明确追责对象与具体行动指令**；E1 主体是**已吃瘪的失利方、核心冲突已演完**；E5 是**只表态度、无具体事件/利害指向**。P1 的“付出代价”绑定了明确的受损事件与追责对象，故不同于 E5 的空洞放狠话。
+
+### Step 2：候选生成
+
+若能识别原剧集边界，优先扫描集尾、剧情阶段结束、自然转场位置——但集尾只是候选来源，不是 Hook 成立理由。
+
+重点寻找：条件提出但回应未出现；信息出现但影响未知；身份线索出现但真实身份未知；危机已发生但解决未知；反击/打脸/能力释放即将发生；关系变化发生但另一方回应未知。
+
+**一个候选区间只对应一个 open_question。** 若在一段连续剧情里发现多个语义不同、可各自独立成立的钩子点，应生成多个候选，分别处理，不得合并为一个长候选（见 Step 6.5 的拆分规则）。
+
+### Step 3：Hook 验证链
+
+每个 Hook 必须依次通过：
+
+1. `established_fact`：存在已发生的客观剧情事实。
+2. `fact_evidence`：事实由台词、字幕、明确动作或可见剧情信息直接证明。
+3. `open_question`：由已发生事实直接产生具体、非空、可被后续回答的未解问题。
+4. 观众未知：答案不能已通过台词、字幕或画面展示（角色不知≠观众不知）。
+5. After End Check：若 `end_time` 后仍有剧情，检查是否存在与 `open_question` 直接相关的回应/结果/推进；有则作增强验证，无关剧情不得视为答案，不得编造后续。
+6. 剧情驱动性检查：`open_question` 必须影响人物选择、利益变化、身份认知、关系变化、冲突发展或结果走向。
+
+不得将表情、情绪、BGM、氛围、常识推断或模型猜测作为事实或证据。事实无法确认、证据不来自视频、问题依赖推测者，删除候选。
+
+### Step 4：hook_type
+
+`hook_type` 只描述已通过验证链的 Hook，不作为召回/成立判断/排序依据。无法准确分类返回 `null`。
+
+- `身份悬念`：身份线索已出现，真实身份未知。
+- `信息悬念`：关键信息已出现，且会影响人物决策、利益关系、身份认知或剧情方向。
+- `结果悬念`：目标或行动明确，结果未知。（受 E2 约束，“行动后无征兆等待初期”不算）
+- `冲突悬念`：冲突已形成，胜负、选择或回应未知。（受 E7 约束，“仅一方变脸情绪反应、无具体反制”不算）
+- `关系悬念`：关系变化已发生，另一方回应未知。
+- `利益期待`：同时存在明确交易/报价/竞价/买卖/争夺/归属选择中至少一项；结果未定；人物需做选择。
+- `危机爆发`：风险已实际发生（被发现、被威胁、被困、证据被夺）；普通压力和贫困背景不算。（受 E4 约束，“仅主角心里察觉可疑、外部冲突未爆发”不算）
+- `爽点兑现前`：有客观证据表明反击/打脸/能力释放**即将**发生（反击台词完成、动作起手、目标就位、倒计时开始，或主角已就当前冲突发出“即将回应/反击”的明确信号）；主角自信、单纯说狠话、配角劝慰担忧等情感过渡**不算**。
+- `爽点余波`：爽点已完成但产生新的未解问题；他人震惊/害怕/沉默不足以成立。（受 E1/E3 约束）
+
+### Step 5：Hook 排除规则
+
+以下不得输出：
+
+- 答案已出现：价格已公布、身份已揭晓、结果已展示、能力效果已完成展示。
+- 单纯情绪：震惊、惊讶、愤怒、哭泣、激动或沉默（P1 例外：主角行动前的情绪化放话+启动指令属有效 hook）。
+- 推测性悬念：依赖“似乎/可能/仿佛/感觉”等推断成立。
+- 非剧情包装：片头/片尾包装、前情回顾、下集预告、章节标题、营销/导流字幕、非剧情目的的重复镜头。
+- E1-E8（见 Step 0.5）：高潮后失利方部署过渡 / 无征兆等待初期 / 真相已说全的收尾 / 察觉异常的心理收尾 / 空洞宣告铺垫台词 / 评价感慨过渡对白 / 指控后仅本能变脸反应 / 日常事务协商的弱悬念；并叠加「核心爆点已释放 / 仅内心怀疑戒备 / 笼统威压无具体冲突」三条跨类型通杀。
+
+已展示价值/系统鉴定结果/能力效果、已完成身份揭露或爽点兑现的内容，默认不作 Hook，除非其后产生新的、明确且未解决的剧情问题。
+
+### Step 6：Hook 截点规则
+
+截点优先级：`答案未泄露 &gt; 画面清晰稳定`。关键事件完整成立后，应立即在回应/结果/后果出现前截断。不得为保留完整表情、等待镜头稳定或保留反应镜头而延后导致答案泄露（此即“高潮已过”，亦是 E3 的成因）。
+
+- 对“渐进式结果”类（E2）：截点要么在**行动即将发起的临界点前**，要么等到**结果将至的明确信号出现时**；不要停在两者之间无征兆的空等阶段。
+- 对“指控/揭穿”类（E7）：不要停在被指控方“刚变脸”的瞬间，要么停在指控刚落、答案未出的临界点，要么等到“具体反制/升级/反转即将发生”的信号点。
+
+### Step 6.5：时长复核与收紧/拆分（对齐 Step 0.3，输出前强制执行）
+
+确定 `end_time` 后，对每条候选计算 `dur = end_time - start_time`，按下列规则处理：
+
+1. **`8s ≤ dur ≤ 20s`**：合格，直接进入去重。
+2. **`20s &lt; dur ≤ 30s`**：优先**向后收紧 `start_time`**（保持 end_time 不动），只保留“让 open_question 成立所必需的最小前置事实”——删掉与该 open_question 无关的前情铺垫、无关对白、过场。收紧后能落入 ≤20s 更好；若前置事实确实密集、收紧后仍在 20-30s，可保留，但须确保这段前情都是理解钩子所必需。
+3. **`dur &gt; 30s`（硬违规，必须处理）**：
+   - 先判断这段区间里是否**只有一个** open_question：若是，则大概率是 `start_time` 取得过早，向后大幅收紧起点到最小必要前情；
+   - 若这段区间里其实包含**多个语义不同、可各自独立成立**的钩子点（常见于把“事件A的悬念”和“事件B的悬念”塞进同一段），**必须拆分为多条独立 hook**，每条各自选择自己的最小前情 `start_time` 与结尾停顿点 `end_time`，各自落入 8-20s；拆分后逐条重新过 Step 0 / Step 0.5 / 验证链。
+   - **严禁**用“移动/延后 `end_time`”的方式压缩时长（会截晚泄露答案，踩 E3）；只允许动 `start_time` 或拆分。
+4. 收紧或拆分后若某条不再满足三力/验证链/时长门槛，删除该条。
+
+一个核心原则：**不允许用一个超长片段覆盖多个候选点或整段剧情**。宁可输出多条短而准的 hook，也不要一条长而糊的 hook。
+
+### Step 7：去重与文案
+
+按 `open_question` 的语义去重。同一核心问题只保留一个 Hook，优先保留：前提更完整；问题更明确；截点更准确；答案未泄露；**在同等语义质量下，时长更贴近 8-20s 目标区间者优先**。只有新的剧情事实产生新的、语义不同的 `open_question` 时，才允许保留多个 Hook。
+
+`description` 只描述 `end_time` 前已发生的内容，不得描述未来。
+
+`end_point_reason` 固定格式：`已成立：XXX；未展开：XXX。`（“已成立”对应 description 中的客观事实，“未展开”直接对应 open_question，不得虚构后续。）
+
+### Step 8：排序规则
+
+按 `明确未解问题 &gt; 截点准确性 &gt; 后续推进确定性 &gt; 剧情重要程度 &gt; 原剧结尾价值 &gt; 视觉和情绪冲击` 排序。“后续推进确定性”仅在当前输入可验证对应后续时参与排序；未展示后续时不因此降权。不得因表情、BGM 或单纯视觉刺激提高排序。
+
+即时冲击优先：同等条件下，“结尾带即时冲突/戛然而止的冲击感”优先于“人物心理活动、评价感慨或流程叙述已完整”。停在“主角刚在心里确认可疑、失利方正在布置任务、角色发表评价感慨、被指控方刚变脸”这类平淡节点，排序必须靠后乃至落入 E1/E4/E6/E7 排除。
+
+---
+
+## 5. 输出格式
+
+始终输出 `highlights` 和 `hook` 两个字段。`highlights` 恒为 `[]`。无合格 hook 时 `hook` 返回 `[]`，不得省略字段。
+
+无 `episode_metadata` 时省略所有 `episode_index`。`open_question` 必须为非空具体问题。`hook_type` 必须为上述枚举值或 `null`。
+
+**每条 hook 的 `end_time - start_time` 必须满足 Step 0.3：目标 8-20s，绝不超过 30s。** 输出前对每条做最后一次时长自检。
+
+输出必须为合法 JSON：
+
+{
+  &quot;highlights&quot;: [],
+  &quot;hook&quot;: [
+    {
+      &quot;episode_index&quot;: 2,
+      &quot;start_time&quot;: 600000,
+      &quot;end_time&quot;: 612000,
+      &quot;description&quot;: &quot;买家提出明确报价，男主尚未回应。&quot;,
+      &quot;hook_type&quot;: &quot;利益期待&quot;,
+      &quot;open_question&quot;: &quot;男主是否接受这份报价？&quot;,
+      &quot;end_point_reason&quot;: &quot;已成立：买家已提出明确报价；未展开：男主是否接受报价。&quot;
+    }
+  ]
+}
+</pre>
+  </section>
+
+  <footer>
+    创量魔剪 · 短剧 Hook 提取自动化迭代 ｜ 数据由 Seed 2.1 Turbo 提取、Seed 2.1 Pro 诊断、benchmark 客观评测生成
+  </footer>
+</div>
+</body>
+</html>
